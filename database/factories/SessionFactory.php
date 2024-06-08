@@ -14,7 +14,7 @@ class SessionFactory extends Factory
         return [
             'start_date' => now(),
             'end_date' => now()->addWeek(),
-            'is_active' => false,
+            'active' => false,
         ];
     }
 }
