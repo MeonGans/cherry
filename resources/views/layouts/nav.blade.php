@@ -83,8 +83,8 @@
                     <button
                         type="button"
                         class="nav-link group"
-                        :class="{'active' : activeDropdown === 'dashboard'}"
-                        @click="activeDropdown === 'dashboard' ? activeDropdown = null : activeDropdown = 'dashboard'"
+                        :class="{'active' : activeDropdown === 'vote'}"
+                        @click="activeDropdown === 'vote' ? activeDropdown = null : activeDropdown = 'vote'"
                     >
                         <div class="flex items-center">
                             <svg
@@ -110,13 +110,13 @@
 
                             <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Голосування</span>
                         </div>
-                        <div class="rtl:rotate-180" :class="{'!rotate-90' : activeDropdown === 'dashboard'}">
+                        <div class="rtl:rotate-180" :class="{'!rotate-90' : activeDropdown === 'vote'}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                     </button>
-                    <ul x-cloak x-show="activeDropdown === 'dashboard'" x-collapse class="sub-menu text-gray-500">
+                    <ul x-cloak x-show="activeDropdown === 'vote'" x-collapse class="sub-menu text-gray-500">
                         <li>
                             <a href="{{ route('votes.create') }}" class="{{ Request::routeIs('votes.create') ? 'active' : '' }}">Створити голосування</a>
                         </li>
@@ -129,8 +129,8 @@
                     <button
                         type="button"
                         class="nav-link group"
-                        :class="{'active' : activeDropdown === 'dashboard'}"
-                        @click="activeDropdown === 'dashboard' ? activeDropdown = null : activeDropdown = 'dashboard'"
+                        :class="{'active' : activeDropdown === 'products'}"
+                        @click="activeDropdown === 'products' ? activeDropdown = null : activeDropdown = 'products'"
                     >
                         <div class="flex items-center">
                             <svg class="shrink-0 group-hover:!text-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -140,13 +140,13 @@
 
                             <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Колесо фортуни</span>
                         </div>
-                        <div class="rtl:rotate-180" :class="{'!rotate-90' : activeDropdown === 'dashboard'}">
+                        <div class="rtl:rotate-180" :class="{'!rotate-90' : activeDropdown === 'products'}">
                             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </div>
                     </button>
-                    <ul x-cloak x-show="activeDropdown === 'dashboard'" x-collapse class="sub-menu text-gray-500">
+                    <ul x-cloak x-show="activeDropdown === 'products'" x-collapse class="sub-menu text-gray-500">
                         <li>
                             <a href="{{ route('products.index') }}" class="{{ Request::routeIs('products') ? 'active' : '' }}">Товари</a>
                         </li>
