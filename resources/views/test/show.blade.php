@@ -11,7 +11,7 @@
                 <form action="{{ route('test.submit') }}" method="POST">
                     @csrf
                     <div class="mb-5">
-                    <select class="selectize" name="user_id" id="user_id" required>
+                    <select class="selectize h-5" name="user_id" id="user_id" required>
                         <option selected value="">Виберіть користувача</option>
                         @foreach($usersWithoutTeam as $user)
                             <option value="{{ $user->id }}">{{ $user->name }}</option>
