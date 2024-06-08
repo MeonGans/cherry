@@ -12,8 +12,8 @@ class TestController extends Controller
 {
     public function show()
     {
-        // Отримати 3 випадкові запитання з відповідями
-        $questions = Question::with('answers')->inRandomOrder()->take(3)->get();
+        // Отримати 5 випадкових запитання з відповідями
+        $questions = Question::with('answers')->inRandomOrder()->take(5)->get();
         // Отримати користувачів без команди
         $usersWithoutTeam = User::whereNull('team_id')->get();
 
@@ -48,7 +48,7 @@ class TestController extends Controller
         foreach ($teamScores as $teamId => $score) {
             $team = Team::find($teamId);
             $teamCount = $team->users()->count();
-            if (($teamId == 1 && $teamCount < 3) || ($teamId != 1 && $teamCount < 2)) {
+            if (($teamId == 1 && $teamCount < 6) || ($teamId != 1 && $teamCount < 5)) {
                 $selectedTeamId = $teamId;
                 break;
             }
@@ -61,7 +61,7 @@ class TestController extends Controller
                     return false; // Пропустити команду з ID 10
                 }
                 $teamCount = $team->users()->count();
-                return ($team->id == 1 && $teamCount < 3) || ($team->id != 1 && $teamCount < 1);
+                return ($team->id == 1 && $teamCount < 6) || ($team->id != 1 && $teamCount < 5);
             });
 
             if ($availableTeams->isEmpty()) {
