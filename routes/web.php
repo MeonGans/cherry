@@ -57,3 +57,10 @@ use App\Http\Controllers\AdminAuthController;
 Route::get('/admin/login', [AdminAuthController::class, 'showLoginForm'])->name('admin.login');
 Route::post('/admin/login', [AdminAuthController::class, 'login'])->name('admin.login.submit');
 Route::post('/admin/logout', [AdminAuthController::class, 'logout'])->name('admin.logout');
+
+
+use App\Http\Controllers\QuestController;
+
+Route::get('/quest', [QuestController::class, 'show'])->name('quest.show');
+Route::post('/quest', [QuestController::class, 'handle'])->name('quest.handle');
+Route::get('/quest/result/{position}', [QuestController::class, 'result'])->name('quest.result');
