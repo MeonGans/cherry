@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Session;
 use App\Models\User;
 use App\Models\Question;
 use App\Models\Answer;
@@ -12,10 +13,17 @@ class TestController extends Controller
 {
     public function show()
     {
-        // Отримати 5 випадкових запитання з відповідями
-        $questions = Question::with('answers')->inRandomOrder()->take(5)->get();
-        // Отримати користувачів без команди
-        $usersWithoutTeam = User::whereNull('team_id')->get();
+        // Вибираємо 5 випадкові запитання
+        $questions = Question::inRandomOrder()->take(5)->get();
+
+        // Отримуємо ID активної сесії
+        $activeSessionId = Session::where('active', true)->first()->id;
+
+        // Список користувачів, які без команди і які в активній сесії
+        $usersWithoutTeam = User::whereNull('team_id')
+            ->where('session_id', $activeSessionId)
+            ->get();
+
 
         return view('test.show', compact('questions', 'usersWithoutTeam'));
     }
