@@ -50,32 +50,35 @@ class TestController extends Controller
 
         // Визначення команди з найбільшою кількістю балів
         arsort($teamPoints);
-        $selectedTeamId = key($teamPoints);
 
         // Перевірка наявності місць у команді та кількості хлопців
         $maxMembers = 5;
 
-        $teams = Team::withCount(['users as males_count' => function ($query) {
-            $query->where('gender', 'male');
-        }])->withCount('users')->get()->keyBy('id');
+        $teams = Team::withCount([
+            'users as males_count' => function ($query) {
+                $query->where('gender', 'male');
+            },
+            'users as total_count'
+        ])->get()->keyBy('id');
 
+        $selectedTeamId = null;
         foreach ($teamPoints as $teamId => $points) {
             $team = $teams[$teamId];
 
-            if ($team->users_count < $maxMembers && ($team->males_count < 2 || $user->gender != 'male')) {
+            if ($team->total_count < $maxMembers) {
+                if ($team->males_count < 2 && $user->gender == 'male') {
+                    continue;
+                }
                 $selectedTeamId = $teamId;
                 break;
             }
         }
 
-        // Якщо всі команди заповнені, вибір команди випадково серед тих, де є місця і мінімум 2 хлопці
-        if (($teams[$selectedTeamId]->users_count >= $maxMembers) ||
-            ($teams[$selectedTeamId]->males_count >= 2 && $user->gender == 'male')) {
+        // Якщо всі команди заповнені або немає команди, яка відповідає умовам
+        if (is_null($selectedTeamId)) {
             $availableTeams = Team::whereDoesntHave('users', function ($query) use ($maxMembers) {
                 $query->havingRaw('COUNT(*) < ?', [$maxMembers]);
-            })->whereHas('users', function ($query) {
-                $query->where('gender', 'male');
-            }, '>=', 2)->pluck('id')->toArray();
+            })->pluck('id')->toArray();
 
             if (!empty($availableTeams)) {
                 $selectedTeamId = $availableTeams[array_rand($availableTeams)];
