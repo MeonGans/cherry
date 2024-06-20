@@ -11,7 +11,7 @@ use App\Models\Session;
 
 class TestController extends Controller
 {
-    public function show()
+    public function showTestForm()
     {
         // Вибираємо 3 випадкові запитання
         $questions = Question::inRandomOrder()->take(3)->get();
