@@ -24,7 +24,7 @@ class TestController extends Controller
             ->where('session_id', $activeSessionId)
             ->get();
 
-        return view('test', compact('questions', 'users'));
+        return view('test.show', compact('questions', 'users'));
     }
 
     public function handleTestSubmission(Request $request)
