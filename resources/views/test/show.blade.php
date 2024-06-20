@@ -8,7 +8,7 @@
         </div>
         <div class="mb-5">
             <div class="table-responsive">
-                <form action="{{ route('test.submit') }}" method="POST">
+                <form action="{{ route('test.handle') }}" method="POST">
                     @csrf
                     <div class="mb-5">
                     <select class="selectize h-5" name="user_id" id="user_id" required>
