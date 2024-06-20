@@ -17,11 +17,16 @@ class TestController extends Controller
         $questions = Question::inRandomOrder()->take(3)->get();
 
         // Отримуємо ID активної сесії
-        $activeSessionId = Session::where('active', true)->first()->id;
+        $activeSession = Session::where('active', true)->first();
+
+        // Перевіряємо, чи є активна сесія
+        if (!$activeSession) {
+            return redirect()->back()->with('error', 'Немає активної сесії.');
+        }
 
         // Список користувачів, які без команди і які в активній сесії
         $users = User::whereNull('team_id')
-            ->where('session_id', $activeSessionId)
+            ->where('session_id', $activeSession->id)
             ->get();
 
         return view('test.show', compact('questions', 'users'));
@@ -51,24 +56,16 @@ class TestController extends Controller
         // Визначення команди з найбільшою кількістю балів
         arsort($teamPoints);
 
-        // Перевірка наявності місць у команді та кількості хлопців
+        // Перевірка наявності місць у команді
         $maxMembers = 5;
 
-        $teams = Team::withCount([
-            'users as males_count' => function ($query) {
-                $query->where('gender', 'male');
-            },
-            'users as total_count'
-        ])->get()->keyBy('id');
+        $teams = Team::withCount('users')->get()->keyBy('id');
 
         $selectedTeamId = null;
         foreach ($teamPoints as $teamId => $points) {
             $team = $teams[$teamId];
 
-            if ($team->total_count < $maxMembers) {
-                if ($team->males_count < 2 && $user->gender == 'male') {
-                    continue;
-                }
+            if ($team->users_count < $maxMembers) {
                 $selectedTeamId = $teamId;
                 break;
             }
