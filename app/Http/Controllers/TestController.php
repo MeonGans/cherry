@@ -2,95 +2,97 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Session;
-use App\Models\User;
+use Illuminate\Http\Request;
 use App\Models\Question;
 use App\Models\Answer;
+use App\Models\User;
 use App\Models\Team;
-use Illuminate\Http\Request;
+use App\Models\Session;
 
 class TestController extends Controller
 {
-    public function show()
+    public function showTestForm()
     {
-        // Вибираємо 5 випадкові запитання
-        $questions = Question::inRandomOrder()->take(5)->get();
+        // Вибираємо 3 випадкові запитання
+        $questions = Question::inRandomOrder()->take(3)->get();
 
         // Отримуємо ID активної сесії
         $activeSessionId = Session::where('active', true)->first()->id;
 
         // Список користувачів, які без команди і які в активній сесії
-        $usersWithoutTeam = User::whereNull('team_id')
+        $users = User::whereNull('team_id')
             ->where('session_id', $activeSessionId)
             ->get();
 
-
-        return view('test.show', compact('questions', 'usersWithoutTeam'));
+        return view('test', compact('questions', 'users'));
     }
 
-    public function submit(Request $request)
+    public function handleTestSubmission(Request $request)
     {
-        $data = $request->validate([
+        $request->validate([
             'user_id' => 'required|exists:users,id',
             'answers' => 'required|array',
-            'answers.*' => 'required|exists:answers,id',
+            'answers.*' => 'exists:answers,id',
         ]);
 
-        $teamScores = [];
+        $user = User::find($request->input('user_id'));
 
-        foreach ($data['answers'] as $answerId) {
-            $answer = Answer::find($answerId);
-            if ($answer) {
-                if (!isset($teamScores[$answer->team_id])) {
-                    $teamScores[$answer->team_id] = 0;
-                }
-                $teamScores[$answer->team_id]++;
+        $answers = Answer::whereIn('id', $request->input('answers'))->get();
+
+        // Підрахунок балів для кожної команди
+        $teamPoints = [];
+        foreach ($answers as $answer) {
+            if (!isset($teamPoints[$answer->team_id])) {
+                $teamPoints[$answer->team_id] = 0;
             }
+            $teamPoints[$answer->team_id]++;
         }
 
-        // Сортування команд за балами у зменшуваному порядку
-        arsort($teamScores);
+        // Визначення команди з найбільшою кількістю балів
+        arsort($teamPoints);
+        $selectedTeamId = key($teamPoints);
 
-        // Вибір команди з урахуванням обмеження на кількість користувачів
-        $selectedTeamId = null;
-        foreach ($teamScores as $teamId => $score) {
-            $team = Team::find($teamId);
-            $teamCount = $team->users()->count();
-            if (($teamId == 1 && $teamCount < 6) || ($teamId != 1 && $teamCount < 5)) {
+        // Перевірка наявності місць у команді та кількості хлопців
+        $maxMembers = 5;
+
+        $teams = Team::withCount(['users as males_count' => function ($query) {
+            $query->where('gender', 'male');
+        }])->withCount('users')->get()->keyBy('id');
+
+        foreach ($teamPoints as $teamId => $points) {
+            $team = $teams[$teamId];
+
+            if ($team->users_count < $maxMembers && ($team->males_count < 2 || $user->gender != 'male')) {
                 $selectedTeamId = $teamId;
                 break;
             }
         }
 
-        if ($selectedTeamId === null) {
-            // Розподіл користувача рандомно серед інших вільних команд
-            $availableTeams = Team::all()->filter(function($team) {
-                if ($team->id == 10) {
-                    return false; // Пропустити команду з ID 10
-                }
-                $teamCount = $team->users()->count();
-                return ($team->id == 1 && $teamCount < 6) || ($team->id != 1 && $teamCount < 5);
-            });
+        // Якщо всі команди заповнені, вибір команди випадково серед тих, де є місця і мінімум 2 хлопці
+        if (($teams[$selectedTeamId]->users_count >= $maxMembers) ||
+            ($teams[$selectedTeamId]->males_count >= 2 && $user->gender == 'male')) {
+            $availableTeams = Team::whereDoesntHave('users', function ($query) use ($maxMembers) {
+                $query->havingRaw('COUNT(*) < ?', [$maxMembers]);
+            })->whereHas('users', function ($query) {
+                $query->where('gender', 'male');
+            }, '>=', 2)->pluck('id')->toArray();
 
-            if ($availableTeams->isEmpty()) {
-                return redirect()->route('test.show')->withErrors(['message' => 'Всі команди заповнені']);
+            if (!empty($availableTeams)) {
+                $selectedTeamId = $availableTeams[array_rand($availableTeams)];
             }
-
-            $selectedTeamId = $availableTeams->random()->id;
         }
 
-        $team = Team::find($selectedTeamId);
-
-        // Оновлення команди користувача
-        $user = User::find($data['user_id']);
-        $user->team_id = $team->id;
+        $user->team_id = $selectedTeamId;
         $user->save();
 
-        return redirect()->route('test.result', ['team' => $team]);
+        return redirect()->route('test.result', ['team' => $selectedTeamId]);
     }
 
-    public function result(Team $team)
+    public function showTestResult($teamId)
     {
-        return view('test.result', compact('team'));
+        $team = Team::findOrFail($teamId);
+        $message = "Вітаємо! Ви потрапили в команду {$team->name}.";
+
+        return view('test-result', compact('message'));
     }
 }

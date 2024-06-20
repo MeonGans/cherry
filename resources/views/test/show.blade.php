@@ -13,7 +13,7 @@
                     <div class="mb-5">
                     <select class="selectize h-5" name="user_id" id="user_id" required>
                         <option selected value="">Виберіть користувача</option>
-                        @foreach($usersWithoutTeam as $user)
+                        @foreach($users as $user)
                             <option value="{{ $user->id }}">{{ $user->name }}</option>
                         @endforeach
                     </select>
