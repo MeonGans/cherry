@@ -93,6 +93,6 @@ class TestController extends Controller
         $team = Team::findOrFail($teamId);
         $message = "Вітаємо! Ви потрапили в команду {$team->name}.";
 
-        return view('test-result', compact('message'));
+        return view('test.result', compact('message'));
     }
 }
