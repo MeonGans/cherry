@@ -79,6 +79,8 @@ class TestController extends Controller
 
             if (!empty($availableTeams)) {
                 $selectedTeamId = $availableTeams[array_rand($availableTeams)];
+            } else {
+                return redirect()->back()->with('error', 'Немає доступних команд з місцями.');
             }
         }
 
