@@ -27,9 +27,10 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/random_list', [UserController::class, 'random'])->name('random_list');
 
 
-    Route::get('/test', [TestController::class, 'show'])->name('test.show');
-    Route::post('/test', [TestController::class, 'submit'])->name('test.submit');
-    Route::get('/test/result/{team}', [TestController::class, 'result'])->name('test.result');
+    Route::get('/test', [TestController::class, 'showTestForm'])->name('test.show');
+    Route::post('/test', [TestController::class, 'handleTestSubmission'])->name('test.handle');
+    Route::get('/test/result/{team}', [TestController::class, 'showTestResult'])->name('test.result');
+
 
 
     Route::get('/votes', [VoteController::class, 'index'])->name('votes.index');
