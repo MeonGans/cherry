@@ -14,7 +14,7 @@ class TestController extends Controller
     public function showTestForm()
     {
         // Вибираємо 3 випадкові запитання
-        $questions = Question::inRandomOrder()->take(5)->get();
+        $questions = Question::inRandomOrder()->take(3)->get();
 
         // Отримуємо ID активної сесії
         $activeSession = Session::where('active', true)->first();
@@ -42,58 +42,18 @@ class TestController extends Controller
 
         $user = User::find($request->input('user_id'));
 
-        $answers = Answer::whereIn('id', $request->input('answers'))->get();
-
-        // Підрахунок балів для кожної команди
-        $teamPoints = [];
-        foreach ($answers as $answer) {
-            if (!isset($teamPoints[$answer->team_id])) {
-                $teamPoints[$answer->team_id] = 0;
-            }
-            $teamPoints[$answer->team_id]++;
-        }
-
-        // Визначення команди з найбільшою кількістю балів
-        arsort($teamPoints);
-
-        // Перевірка наявності місць у команді
-        $maxMembers = 5;
-
-        $teams = Team::withCount('users')->get()->keyBy('id');
-
-        $selectedTeamId = null;
-        foreach ($teamPoints as $teamId => $points) {
-            $team = $teams[$teamId];
-
-            if ($team->users_count < $maxMembers) {
-                $selectedTeamId = $teamId;
-                break;
-            }
-        }
-
-        // Якщо всі команди заповнені або немає команди, яка відповідає умовам
-        if (is_null($selectedTeamId)) {
-            $availableTeams = Team::whereDoesntHave('users', function ($query) use ($maxMembers) {
-                $query->havingRaw('COUNT(*) < ?', [$maxMembers]);
-            })->pluck('id')->toArray();
-
-            if (!empty($availableTeams)) {
-                $selectedTeamId = $availableTeams[array_rand($availableTeams)];
-            } else {
-                return redirect()->back()->with('error', 'Немає доступних команд з місцями.');
-            }
-        }
-
-        $user->team_id = $selectedTeamId;
+        $user->team_id = $user->desired_team_id;
+        // Записуємо бажану команду
+//        $user->desired_team_id = $request->input('desired_team_id');
         $user->save();
 
-        return redirect()->route('test.result', ['team' => $selectedTeamId]);
+        return redirect()->route('test.result', ['team' => $user->team_id]);
     }
 
     public function showTestResult($teamId)
     {
         $team = Team::findOrFail($teamId);
-        $message = "Вітаємо! Ви потрапили в команду {$team->name}.";
+        $message = "Вітаємо! Вас розподілено в команду {$team->name}.";
 
         return view('test.result', compact('message', 'team'));
     }
