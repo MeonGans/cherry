@@ -2,11 +2,10 @@
 
 @section('content')
     <div class="container">
-        <h1>Admin Login</h1>
+        <h1>Авторизація. Введіть пін-код</h1>
         <form action="{{ route('admin.login.submit') }}" method="POST">
             @csrf
-            <div class="form-group">
-                <label for="pin">PIN Code</label>
+            <div class="form-group mp-2">
                 <input type="password" name="pin" id="pin" class="form-control" required>
             </div>
             @if ($errors->any())
@@ -18,7 +17,7 @@
                     </ul>
                 </div>
             @endif
-            <button type="submit" class="btn btn-primary">Login</button>
+            <button type="submit" class="btn btn-primary mt-2">Увійти</button>
         </form>
     </div>
 @endsection

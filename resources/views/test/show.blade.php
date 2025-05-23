@@ -18,26 +18,49 @@
                         @endforeach
                     </select>
                     </div>
-                    @foreach($questions as $question)
-                        @php
-                            $answers = $question->answers->shuffle();
-                        @endphp
-                        <div class="mb-5">
-                            <label>{{ $question->question }}</label>
-                            <div class="flex">
-                                <div class="mb-5">
-                                    <div class="space-y-2">
-                                        @foreach($answers as $answer)<div>
+                    @foreach ($questions as $question)
+                        @php  $answers = $question->answers->shuffle();  @endphp
 
-                                                <label class="inline-flex">
-                                                    <input type="radio" name="answers[{{ $question->id }}]" value="{{ $answer->id }}" class="form-radio peer" required />
-                                                    <span class="peer-checked:text-primary">{{ $answer->answer }}</span>
-                                                </label>
+                        <div class="mb-8">
+                            <label class="block mb-4 font-medium">{{ $question->question }}</label>
 
-                                        </div>
-                                        @endforeach
-                                    </div>
-                                </div>
+                            {{-- варіанти картинками по 3 в ряд --}}
+                            <div class="grid grid-cols-3 gap-4">
+                                @foreach ($answers as $answer)
+                                    <label class="relative cursor-pointer">
+                                        {{-- прихований radio --}}
+                                        <input  type="radio"
+                                                name="answers[{{ $question->id }}]"
+                                                value="{{ $answer->id }}"
+                                                class="sr-only peer"
+                                                required />
+
+                                        {{-- зображення відповіді --}}
+                                        <img    src="assets/images/answer/{{ $answer->img }}.jpg"
+                                                alt="{{ $answer->answer }}"
+                                                class="w-full aspect-square object-cover rounded-lg
+                                                       border-4 border-transparent
+                                                       transition-all
+                                                       peer-checked:border-primary
+                                                       peer-checked:ring-4 peer-checked:ring-primary/30" />
+
+                                        {{-- галочка поверх вибраної (можна прибрати) --}}
+                                        {{-- ✅ галочка поверх (оновлена) --}}
+                                        <svg viewBox="0 0 24 24"
+                                             class="absolute inset-0 m-auto w-12 h-12
+                stroke-white drop-shadow-lg   {{-- біла обводка + легка тінь --}}
+                opacity-0 scale-90 z-10      {{-- поверх фото --}}
+                transition duration-200
+                pointer-events-none
+                peer-checked:opacity-100 peer-checked:scale-100">
+                                            <path d="M5 13l4 4L19 7"
+                                                  fill="none"
+                                                  stroke-width="3"
+                                                  stroke-linecap="round"
+                                                  stroke-linejoin="round" />
+                                        </svg>
+                                    </label>
+                                @endforeach
                             </div>
                         </div>
                     @endforeach

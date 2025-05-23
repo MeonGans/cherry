@@ -14,7 +14,7 @@ class TestController extends Controller
     public function showTestForm()
     {
         // Вибираємо 3 випадкові запитання
-        $questions = Question::inRandomOrder()->take(3)->get();
+        $questions = Question::inRandomOrder()->take(4)->get();
 
         // Отримуємо ID активної сесії
         $activeSession = Session::where('active', true)->first();

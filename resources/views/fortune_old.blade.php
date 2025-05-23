@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>FORTUNE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ asset('fort/css/reset.css') }}" />
     <link rel="stylesheet" href="{{ asset('fort/css/main.css') }}" />
 </head>
@@ -14,7 +15,7 @@
     <div class="product_wrap">
         <form method="post" class="product" :style="{'--product-shift-by': -(this.randomShift * productsAmountVisible) + '%'}" action="{{ route('fortune.catch') }}">
             @csrf
-            <img :src="`{{ asset('fort/images/products/${product.id}.png') }}`" alt="">
+            <img :src="`{{ asset('fort/images/products/${product.id}.jpg') }}`" alt="">
             <div class="product_info">
                 <h2 v-text="product.name"></h2>
                 <input type="hidden" name="id_product" value="{{ $winFortune['id'] }}">
