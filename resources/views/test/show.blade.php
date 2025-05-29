@@ -36,7 +36,7 @@
                                                 required />
 
                                         {{-- зображення відповіді --}}
-                                        <img    src="assets/images/answer/{{ $answer->img }}.jpg"
+                                        <img    src="assets/images/answer/{{ $answer->img }}.png"
                                                 alt="{{ $answer->answer }}"
                                                 class="w-full aspect-square object-cover rounded-lg
                                                        border-4 border-transparent
