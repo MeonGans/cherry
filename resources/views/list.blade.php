@@ -12,7 +12,7 @@
                 <tr>
                     <th>#</th>
                     <th>Ім'я</th>
-                    <th>Номер телефону</th>
+{{--                    <th>Номер телефону</th>--}}
                     <th>Команда</th>
                 </tr>
                 </thead>
@@ -25,7 +25,7 @@
                     <tr style="background-color: {{ $user->team->element->color ?? '#ffffff' }};">
                         <td>{{ $i }}</td>
                         <td>{{ $user->name }}</td>
-                        <td>{{ $user->phone_number }}</td>
+{{--                        <td>{{ $user->phone_number }}</td>--}}
                         <td>{{ $user->team->name ?? '' }}</td>
                     </tr>
                     @php
