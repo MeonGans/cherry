@@ -31,20 +31,48 @@
     </div>
 
     <style>
+        #password-fields {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+        }
+
         .pin-input {
             width: 50px;
             height: 60px;
             font-size: 28px;
             border: 2px solid #ced4da;
             border-radius: 8px;
-            transition: border-color 0.3s;
+            text-align: center;
+            flex-shrink: 0;
         }
 
         .pin-input:focus {
             border-color: #007bff;
             outline: none;
         }
+
+        @media (max-width: 576px) {
+            .pin-input {
+                width: 40px;
+                height: 50px;
+                font-size: 22px;
+            }
+        }
+
+        /* Щоб на дуже вузьких екранах теж не ламалося */
+        #password-fields::-webkit-scrollbar {
+            display: none;
+        }
+
+        #password-fields {
+            -ms-overflow-style: none;  /* IE і Edge */
+            scrollbar-width: none;     /* Firefox */
+        }
     </style>
+
 
     <script>
         const inputs = document.querySelectorAll('.pin-input');
