@@ -26,7 +26,7 @@ class QuestController extends Controller
             'password' => 'required',
         ]);
 
-        $password = $request->input('password');
+        $password = strtolower($request->input('password'));
 
         if (!in_array($password, $this->validPasswords)) {
             return back()->withErrors(['password' => 'Невірний пароль']);
