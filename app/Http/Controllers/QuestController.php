@@ -8,11 +8,11 @@ use App\Models\Place;
 class QuestController extends Controller
 {
     private $validPasswords = [
-        'ynoujtx',
-        'arptydo',
-        'ndsgxys',
-        'xzbcmps',
-        'mpsxjtx',
+        'ynoujtxx',
+        'arptydox',
+        'ndsgxysx',
+        'xzbcmpsx',
+        'mpsxjtxx',
     ];
 
     public function show()
