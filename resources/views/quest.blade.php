@@ -1,33 +1,44 @@
 @extends('layouts.app2')
 
 @section('content')
-    <div class="container">
-        <h1 class="mb-4">Введіть пароль</h1>
+    <div class="container mb-5">
+        <h2 class="mb-3">Розташуйте слова у правильному порядку</h2>
+        <div id="word-container" class="d-flex flex-wrap gap-2 mb-3">
+            <!-- Сюди вставимо слова -->
+        </div>
+        <button id="check-order-btn" class="btn btn-success">Перевірити порядок</button>
+        <div id="order-status" class="mt-3"></div>
+    </div>
+    <div id="password-section" style="display: none;">
+        <div class="container">
+            <h1 class="mb-4">Введіть пароль</h1>
 
-        <form action="{{ route('quest.handle') }}" method="POST" id="password-form">
-            @csrf
 
-            <div class="d-flex gap-2 justify-content-center mb-4" id="password-fields">
-                @for ($i = 0; $i < 8; $i++)
-                    <input type="text" name="password[]" maxlength="1" pattern="[A-Za-z0-9]" required
-                           class="pin-input text-center" autocomplete="off">
-                @endfor
-            </div>
+            <form action="{{ route('quest.handle') }}" method="POST" id="password-form">
+                @csrf
 
-            @if ($errors->any())
-                <div class="alert alert-danger">
-                    <ul class="mb-0">
-                        @foreach ($errors->all() as $error)
-                            <li>{{ $error }}</li>
-                        @endforeach
-                    </ul>
+                <div class="d-flex gap-2 justify-content-center mb-4" id="password-fields">
+                    @for ($i = 0; $i < 8; $i++)
+                        <input type="text" name="password[]" maxlength="1" pattern="[A-Za-z0-9]" required
+                               class="pin-input text-center" autocomplete="off">
+                    @endfor
                 </div>
-            @endif
 
-            <div class="text-center mt-3">
-                <button type="submit" class="btn btn-primary px-4">Відправити</button>
-            </div>
-        </form>
+                @if ($errors->any())
+                    <div class="alert alert-danger">
+                        <ul class="mb-0">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
+
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-primary px-4">Відправити</button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <style>
@@ -68,8 +79,8 @@
         }
 
         #password-fields {
-            -ms-overflow-style: none;  /* IE і Edge */
-            scrollbar-width: none;     /* Firefox */
+            -ms-overflow-style: none; /* IE і Edge */
+            scrollbar-width: none; /* Firefox */
         }
     </style>
 
@@ -98,6 +109,74 @@
             hidden.name = 'password';
             hidden.value = joined;
             this.appendChild(hidden);
+        });
+    </script>
+    <script>
+        // Початковий правильний порядок слів
+        const correctOrder = ['слово1', 'слово2', 'слово3', 'слово4'];  // заміни на свої слова
+
+        // Створюємо випадковий порядок
+        const shuffledWords = [...correctOrder].sort(() => Math.random() - 0.5);
+
+        const container = document.getElementById('word-container');
+
+        // Вставляємо кнопки
+        shuffledWords.forEach(word => {
+            const btn = document.createElement('button');
+            btn.textContent = word;
+            btn.className = 'btn btn-outline-primary word-btn mt-2';
+            btn.draggable = true;
+            container.appendChild(btn);
+        });
+
+        // Додаємо drag and drop
+        let dragged;
+
+        document.addEventListener('dragstart', function (e) {
+            if (e.target.classList.contains('word-btn')) {
+                dragged = e.target;
+                e.target.style.opacity = 0.5;
+            }
+        });
+
+        document.addEventListener('dragend', function (e) {
+            if (e.target.classList.contains('word-btn')) {
+                e.target.style.opacity = '';
+            }
+        });
+
+        container.addEventListener('dragover', function (e) {
+            e.preventDefault();
+        });
+
+        container.addEventListener('drop', function (e) {
+            e.preventDefault();
+            if (e.target.classList.contains('word-btn') && dragged !== e.target) {
+                let nodes = Array.from(container.children);
+                let draggedIndex = nodes.indexOf(dragged);
+                let targetIndex = nodes.indexOf(e.target);
+
+                if (draggedIndex < targetIndex) {
+                    container.insertBefore(dragged, e.target.nextSibling);
+                } else {
+                    container.insertBefore(dragged, e.target);
+                }
+            }
+        });
+
+        // Перевірка порядку
+        document.getElementById('check-order-btn').addEventListener('click', function () {
+            const currentOrder = Array.from(container.children).map(btn => btn.textContent);
+            const isCorrect = currentOrder.every((word, index) => word === correctOrder[index]);
+
+            const statusDiv = document.getElementById('order-status');
+            if (isCorrect) {
+                statusDiv.innerHTML = '<div class="alert alert-success">Правильний порядок! Можете ввести пароль.</div>';
+                document.getElementById('password-section').style.display = 'block';
+                this.disabled = true; // Вимикаємо кнопку щоб не "гратися" після правильного порядку
+            } else {
+                statusDiv.innerHTML = '<div class="alert alert-danger">Неправильний порядок, спробуйте ще раз.</div>';
+            }
         });
     </script>
 @endsection
