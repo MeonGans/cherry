@@ -54,7 +54,7 @@
         .results-container {
             width: 100%;
             max-width: 620px;
-            height: 800px;
+            height: 600px;
             margin: 0 auto;
             display: flex;
             align-items: flex-end;
