@@ -64,6 +64,7 @@ class VoteController extends Controller
         $user = User::findOrFail($userId);
         $teams = Team::where('id', '!=', $user->team_id)
             ->where('id', '!=', 10)
+            ->where('id', '!=', 5)
             ->get();
 
         return view('votes.vote', compact('vote', 'user', 'teams'));
