@@ -2,8 +2,17 @@
 
 @section('content')
     <style>
+        @media (min-width: 1024px) {
+            body:has(.sorting2-shell) .main-container .main-content {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+
         .sorting2-shell {
+            width: min(1280px, calc(100vw - 48px));
             min-height: calc(100vh - 48px);
+            margin: 0 auto;
             padding: 24px;
             color: #172033;
             background:
@@ -18,7 +27,7 @@
             display: grid;
             grid-template-columns: minmax(240px, 340px) minmax(0, 1fr);
             gap: 20px;
-            max-width: 1180px;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -321,6 +330,7 @@
 
         @media (max-width: 640px) {
             .sorting2-shell {
+                width: calc(100vw - 28px);
                 padding: 14px;
             }
 
