@@ -77,6 +77,9 @@
                         <li>
                             <a href="{{ route('test.show') }}" class="{{ Request::routeIs('test.show') ? 'active' : '' }}">Сортування</a>
                         </li>
+                        <li>
+                            <a href="{{ route('sorting2.show') }}" class="{{ Request::routeIs('sorting2.*') ? 'active' : '' }}">Сортування 2.0</a>
+                        </li>
                     </ul>
                 </li>
                 <li class="menu nav-item">

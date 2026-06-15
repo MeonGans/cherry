@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 use App\Http\Controllers\TestController;
+use App\Http\Controllers\SortingTwoController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\ProductController;
 
@@ -30,6 +31,10 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/test', [TestController::class, 'showTestForm'])->name('test.show');
     Route::post('/test', [TestController::class, 'handleTestSubmission'])->name('test.handle');
     Route::get('/test/result/{team}', [TestController::class, 'showTestResult'])->name('test.result');
+
+    Route::get('/sorting-2', [SortingTwoController::class, 'show'])->name('sorting2.show');
+    Route::post('/sorting-2', [SortingTwoController::class, 'handle'])->name('sorting2.handle');
+    Route::get('/sorting-2/result/{team}', [SortingTwoController::class, 'result'])->name('sorting2.result');
 
 
 
