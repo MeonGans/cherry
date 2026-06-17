@@ -21,6 +21,7 @@ use App\Http\Controllers\ProductController;
 
 
 use App\Http\Controllers\FortuneController;
+use App\Http\Controllers\FortuneTwoController;
 
 Route::middleware(['admin.auth'])->group(function () {
 
@@ -57,6 +58,8 @@ Route::post('/votes/{voteUrl}/vote/{userId}', [VoteController::class, 'submitVot
 
 Route::get('/fortune', [FortuneController::class, 'index'])->name('fortune');
 Route::post('/fortune/catch', [FortuneController::class, 'catch'])->name('fortune.catch');
+Route::get('/fortune-2', [FortuneTwoController::class, 'index'])->name('fortune.two');
+Route::post('/fortune-2/catch', [FortuneTwoController::class, 'catch'])->name('fortune.two.catch');
 
 
 use App\Http\Controllers\AdminAuthController;

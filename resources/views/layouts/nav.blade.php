@@ -156,6 +156,9 @@
                         <li>
                             <a href="{{ route('fortune') }}" class="{{ Request::routeIs('fortune') ? 'active' : '' }}" target="_blank">Колесо</a>
                         </li>
+                        <li>
+                            <a href="{{ route('fortune.two') }}" class="{{ Request::routeIs('fortune.two') ? 'active' : '' }}" target="_blank">Колесо 2.0</a>
+                        </li>
                     </ul>
                 </li>
             </ul>
