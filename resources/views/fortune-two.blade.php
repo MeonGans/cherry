@@ -112,7 +112,7 @@
             z-index: 5;
             display: grid;
             place-items: center;
-            padding: clamp(16px, 4vw, 48px);
+            padding: clamp(16px, 4vw, 48px) 0;
             transition: opacity 540ms ease, transform 700ms ease, filter 700ms ease;
         }
 
@@ -126,13 +126,16 @@
 
         .fortune2-machine {
             position: relative;
-            width: min(96vw, 1280px);
-            padding: clamp(16px, 2.2vw, 28px);
-            border-radius: 8px;
+            width: 100vw;
+            padding: clamp(16px, 2.2vw, 28px) 0;
+            border-radius: 0;
             background:
                 linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)),
                 rgba(16, 18, 28, 0.86);
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            border-left: 0;
+            border-right: 0;
             box-shadow:
                 0 34px 90px rgba(0, 0, 0, 0.56),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.08);
@@ -142,10 +145,10 @@
         .fortune2-machine::after {
             content: "";
             position: absolute;
-            left: clamp(20px, 3vw, 42px);
-            right: clamp(20px, 3vw, 42px);
+            left: 0;
+            right: 0;
             height: 10px;
-            border-radius: 999px;
+            border-radius: 0;
             background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.76), rgba(255, 207, 90, 0.76), transparent);
             filter: blur(0.2px);
             opacity: 0.82;
@@ -161,13 +164,13 @@
 
         .fortune2-flow {
             position: absolute;
-            left: clamp(22px, 3vw, 46px);
-            right: clamp(22px, 3vw, 46px);
+            left: 0;
+            right: 0;
             top: 50%;
             height: 64%;
             transform: translateY(-50%);
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 0;
             pointer-events: none;
             opacity: 0.42;
         }
@@ -187,8 +190,8 @@
                     transparent 26px,
                     transparent 54px
                 );
-            transform: translateX(-54px);
-            animation: flow-left-to-right 1.25s linear infinite;
+            transform: translateX(54px);
+            animation: flow-right-to-left 1.25s linear infinite;
         }
 
         .fortune2-flow::after {
@@ -201,12 +204,15 @@
             position: relative;
             width: 100%;
             overflow: hidden;
-            border-radius: 8px;
+            border-radius: 0;
             padding: 10px 0;
             background:
                 linear-gradient(90deg, rgba(7, 8, 13, 0.95), rgba(25, 29, 45, 0.72), rgba(7, 8, 13, 0.95)),
                 #10121c;
-            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-top: 1px solid rgba(255, 255, 255, 0.18);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+            border-left: 0;
+            border-right: 0;
             box-shadow:
                 inset 0 0 42px rgba(0, 0, 0, 0.62),
                 0 18px 44px rgba(0, 0, 0, 0.36);
@@ -218,7 +224,7 @@
             position: absolute;
             top: 0;
             z-index: 12;
-            width: calc(100% / var(--visible-slots));
+            width: max(12vw, calc(100% / var(--visible-slots)));
             height: 100%;
             pointer-events: none;
         }
@@ -328,7 +334,8 @@
         .fortune2-controls {
             display: flex;
             justify-content: center;
-            margin-top: 24px;
+            margin-top: 28px;
+            padding: 0 16px;
         }
 
         .fortune2-spin {
@@ -343,6 +350,7 @@
             font-weight: 900;
             text-transform: uppercase;
             box-shadow:
+                0 0 0 16px rgba(7, 8, 13, 0.42),
                 0 18px 30px rgba(255, 207, 90, 0.24),
                 0 0 0 0 rgba(255, 207, 90, 0.6);
             animation: spin-pulse 1.6s infinite;
@@ -542,25 +550,25 @@
 
         @keyframes spin-pulse {
             0% {
-                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0.6);
+                box-shadow: 0 0 0 16px rgba(7, 8, 13, 0.42), 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0.6);
             }
 
             70% {
-                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 14px rgba(255, 207, 90, 0);
+                box-shadow: 0 0 0 16px rgba(7, 8, 13, 0.42), 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 14px rgba(255, 207, 90, 0);
             }
 
             100% {
-                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0);
+                box-shadow: 0 0 0 16px rgba(7, 8, 13, 0.42), 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0);
             }
         }
 
-        @keyframes flow-left-to-right {
+        @keyframes flow-right-to-left {
             from {
-                transform: translateX(-54px);
+                transform: translateX(54px);
             }
 
             to {
-                transform: translateX(54px);
+                transform: translateX(-54px);
             }
         }
 
@@ -600,7 +608,7 @@
 
         @media (max-width: 900px) {
             .fortune2-machine {
-                width: min(96vw, 820px);
+                width: 100vw;
             }
 
             .fortune2-prizes {
@@ -611,11 +619,11 @@
 
         @media (max-width: 640px) {
             .fortune2-stage {
-                padding: 12px;
+                padding: 12px 0;
             }
 
             .fortune2-machine {
-                padding: 12px;
+                padding: 12px 0;
             }
 
             .fortune2-spin {
@@ -785,7 +793,7 @@
         const slots = currentVisibleSlots();
         const slotWidth = reelWrap.getBoundingClientRect().width / slots;
 
-        return targetTranslateX() - (travelSlotCount() * slotWidth);
+        return targetTranslateX() + (travelSlotCount() * slotWidth);
     }
 
     function setReelToStart() {
