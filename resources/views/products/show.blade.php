@@ -3,6 +3,7 @@
 @section('content')
     <div class="container">
         <h1>Product Details</h1>
+        <img src="{{ $product->image_url }}" alt="{{ $product->name }}" style="max-width: 160px; margin-bottom: 16px;">
         <p><strong>Name:</strong> {{ $product->name }}</p>
         <p><strong>Quantity:</strong> {{ $product->quantity }}</p>
         <p><strong>Value:</strong> {{ $product->value }}</p>

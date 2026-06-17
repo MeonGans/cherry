@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -29,15 +31,22 @@ class ProductController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'quantity' => 'required|integer',
-            'value' => 'required|numeric'
+            'quantity' => 'required|integer|min:0',
+            'value' => 'required|numeric|min:0|max:999999.99',
+            'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        Product::create($request->all());
+        $product = Product::create([
+            'name' => $validated['name'],
+            'quantity' => $validated['quantity'],
+            'value' => $validated['value'],
+        ]);
 
-        return redirect()->route('products.index')->with('success', 'Product created successfully.');
+        $this->storeImage($request, $product);
+
+        return redirect()->route('products.index')->with('success', 'Товар додано.');
     }
 
     public function show(Product $product)
@@ -52,21 +61,79 @@ class ProductController extends Controller
 
     public function update(Request $request, Product $product)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'quantity' => 'required|integer',
-            'value' => 'required|numeric'
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        $product->update($request->all());
+        $product->update([
+            'name' => $validated['name'],
+        ]);
 
-        return redirect()->route('products.index')->with('success', 'Product updated successfully.');
+        $this->storeImage($request, $product);
+
+        return redirect()->route('products.index')->with('success', 'Товар оновлено.');
+    }
+
+    public function quickUpdate(Request $request, Product $product)
+    {
+        $validated = $request->validate([
+            'quantity' => 'required|integer|min:0',
+            'value' => 'required|numeric|min:0|max:999999.99',
+        ]);
+
+        $product->update($validated);
+
+        return redirect()->route('products.index')->with('success', 'Кількість і цінність оновлено.');
     }
 
     public function destroy(Product $product)
     {
+        $this->deleteImage($product->image_path);
+
         $product->delete();
 
-        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
+        return redirect()->route('products.index')->with('success', 'Товар видалено.');
+    }
+
+    private function storeImage(Request $request, Product $product): void
+    {
+        if (!$request->hasFile('image')) {
+            return;
+        }
+
+        $directory = public_path('fort/images/products');
+        File::ensureDirectoryExists($directory);
+
+        $oldPath = $product->image_path;
+        $file = $request->file('image');
+        $filename = $product->id . '-' . Str::random(12) . '.' . $file->extension();
+
+        $file->move($directory, $filename);
+
+        $product->update([
+            'image_path' => 'fort/images/products/' . $filename,
+        ]);
+
+        $this->deleteImage($oldPath);
+    }
+
+    private function deleteImage(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $path = str_replace('\\', '/', $path);
+
+        if (!str_starts_with($path, 'fort/images/products/')) {
+            return;
+        }
+
+        $fullPath = public_path($path);
+
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
     }
 }

@@ -20,7 +20,11 @@ class FortuneController extends Controller
 
         foreach ($products as $product) {
             for ($i = 0; $i < $product->quantity; $i++) {
-                $arrAllProduct[] = ['id' => $product->id, 'name' => $product->name];
+                $arrAllProduct[] = [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'image_url' => $product->image_url,
+                ];
             }
         }
 

@@ -151,7 +151,7 @@
                     </button>
                     <ul x-cloak x-show="activeDropdown === 'products'" x-collapse class="sub-menu text-gray-500">
                         <li>
-                            <a href="{{ route('products.index') }}" class="{{ Request::routeIs('products') ? 'active' : '' }}">Товари</a>
+                            <a href="{{ route('products.index') }}" class="{{ Request::routeIs('products.*') ? 'active' : '' }}">Товари</a>
                         </li>
                         <li>
                             <a href="{{ route('fortune') }}" class="{{ Request::routeIs('fortune') ? 'active' : '' }}" target="_blank">Колесо</a>

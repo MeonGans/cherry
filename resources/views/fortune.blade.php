@@ -8,16 +8,17 @@
     <link rel="stylesheet" href="{{ asset('fort/css/main.css') }}" />
 </head>
 <body>
+@if($winFortune)
 <div 	id="app" :class="{'is-spun': isSpun}"
         :style="{'--products-amount': productsAmountVisible}">
     <audio src="{{ asset('fort/audio/onion-capers-by-kevin-macleod-from-filmmusic-io.mp3') }}" ref="audio"></audio>
     <div class="product_wrap">
         <form method="post" class="product" :style="{'--product-shift-by': -(this.randomShift * productsAmountVisible) + '%'}" action="{{ route('fortune.catch') }}">
             @csrf
-            <img :src="`{{ asset('fort/images/products/${product.id}.png') }}`" alt="">
+            <img v-if="product" :src="product.image_url" :alt="product.name">
             <div class="product_info">
-                <h2 v-text="product.name"></h2>
-                <input type="hidden" name="id_product" value="{{ $winFortune['id'] }}">
+                <h2 v-text="product ? product.name : ''"></h2>
+                <input type="hidden" name="id_product" :value="product ? product.id : ''">
                 <button type="submit" class="btn is-primary" name="claim_gift_submit">Забрати подарунок</button>
             </div>
         </form>
@@ -28,10 +29,10 @@
         <ul class="products" :style="spinCss">
             <li
                 class="products_item"
-                v-for="product in products"
-                :key="product.id"
+                v-for="(product, index) in products"
+                :key="`${product.id}-${index}`"
             >
-                <img :src="`{{ asset('fort/images/products/${product.id}.png') }}`" />
+                <img :src="product.image_url" :alt="product.name" />
             </li>
         </ul>
     </div>
@@ -84,9 +85,26 @@
             },
         },
         created() {
+            this.productsAmountVisible = Math.min(this.productsAmountVisible, this.productsCount);
+
+            if (this.productsAmountVisible % 2 === 0) {
+                this.productsAmountVisible = Math.max(1, this.productsAmountVisible - 1);
+            }
+
             this.product = this.products[0];
-            this.productPlaceMin = this.productsCount / 2;
-            this.productPlaceMax = this.productsCount - Math.ceil(this.productsAmountVisible / 2);
+
+            if (this.productsCount <= 1) {
+                this.productPlaceMin = 1;
+                this.productPlaceMax = 1;
+                this.productRandomIndex = 1;
+                return;
+            }
+
+            this.productPlaceMin = Math.ceil(this.productsCount / 2);
+            this.productPlaceMax = Math.max(
+                this.productPlaceMin,
+                this.productsCount - Math.ceil(this.productsAmountVisible / 2)
+            );
             this.productRandomIndex = getRandomInt(this.productPlaceMin, this.productPlaceMax);
 
             shuffle(this.products);
@@ -94,12 +112,25 @@
             const productToSwap = this.products[this.productRandomIndex - 1];
             const productIndex = this.products.indexOf(this.product);
 
+            if (!productToSwap || productIndex === -1) {
+                return;
+            }
+
             this.products.splice(this.productRandomIndex - 1, 1, this.product);
             this.products.splice(productIndex, 1, productToSwap);
         },
         methods: {
             spin() {
                 this.playAudio();
+
+                if (this.productsCount <= 1) {
+                    this.productsSlideBy = 0;
+                    setTimeout(() => {
+                        this.isSpun = true;
+                    }, this.spinAnimationDuration * 1000);
+                    return;
+                }
+
                 const productWidthPercent = 100 / this.productsAmountVisible;
                 this.randomShift = getRandomFloat(-(productWidthPercent / this.randomShiftDelta), (productWidthPercent / this.randomShiftDelta));
                 this.productsSlideBy =  ( this.productRandomIndex - (this.productsCount - this.productPlaceMax) )
@@ -133,5 +164,13 @@
         },
     });
 </script>
+@else
+<div style="min-height: 100vh; display: grid; place-items: center; padding: 24px; text-align: center;">
+    <div>
+        <h1 style="font-size: 32px; font-weight: 700; margin-bottom: 12px;">Немає доступних призів</h1>
+        <p style="font-size: 18px;">Додайте товари або збільште їх кількість у системі.</p>
+    </div>
+</div>
+@endif
 </body>
 </html>
