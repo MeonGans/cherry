@@ -159,6 +159,44 @@
             bottom: 9px;
         }
 
+        .fortune2-flow {
+            position: absolute;
+            left: clamp(22px, 3vw, 46px);
+            right: clamp(22px, 3vw, 46px);
+            top: 50%;
+            height: 64%;
+            transform: translateY(-50%);
+            overflow: hidden;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0.42;
+        }
+
+        .fortune2-flow::before,
+        .fortune2-flow::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(
+                    90deg,
+                    transparent 0,
+                    transparent 22px,
+                    rgba(255, 255, 255, 0.12) 22px,
+                    rgba(255, 255, 255, 0.12) 26px,
+                    transparent 26px,
+                    transparent 54px
+                );
+            transform: translateX(-54px);
+            animation: flow-left-to-right 1.25s linear infinite;
+        }
+
+        .fortune2-flow::after {
+            opacity: 0.42;
+            animation-duration: 1.9s;
+            animation-direction: reverse;
+        }
+
         .fortune2-reel-wrap {
             position: relative;
             width: 100%;
@@ -516,6 +554,16 @@
             }
         }
 
+        @keyframes flow-left-to-right {
+            from {
+                transform: translateX(-54px);
+            }
+
+            to {
+                transform: translateX(54px);
+            }
+        }
+
         @keyframes winner-lift {
             0% {
                 transform: translateY(0) scale(1);
@@ -619,6 +667,7 @@
 
     <section class="fortune2-stage" aria-label="Прокрут призів">
         <div class="fortune2-machine">
+            <div class="fortune2-flow" aria-hidden="true"></div>
             <div class="fortune2-reel-wrap" data-reel-wrap>
                 <div class="fortune2-arrows" aria-hidden="true">
                     @foreach($arrowSlotIndexes as $slot)
@@ -703,6 +752,7 @@
     const firstArrowSlot = Number(app.dataset.firstArrowSlot || 3);
     const targetStartIndex = Number(app.dataset.targetStartIndex || 0);
     const spinDurationSeconds = 11.8;
+    const maxTravelSlots = 30;
     const colors = ['#eb3349', '#12b9c9', '#ffcf5a', '#ffffff', '#6ee7b7', '#f97316'];
     const particles = [];
     let audioFadeTimer = null;
@@ -722,6 +772,27 @@
         const slotWidth = reelWrap.getBoundingClientRect().width / slots;
 
         return (firstArrowSlot - targetStartIndex) * slotWidth;
+    }
+
+    function travelSlotCount() {
+        const items = reel.children.length;
+        const availableTail = items - targetStartIndex - currentVisibleSlots() - 2;
+
+        return Math.max(12, Math.min(maxTravelSlots, availableTail));
+    }
+
+    function startTranslateX() {
+        const slots = currentVisibleSlots();
+        const slotWidth = reelWrap.getBoundingClientRect().width / slots;
+
+        return targetTranslateX() - (travelSlotCount() * slotWidth);
+    }
+
+    function setReelToStart() {
+        reel.style.transition = 'none';
+        reel.style.transform = `translateX(${startTranslateX()}px)`;
+        reel.offsetHeight;
+        reel.style.transition = '';
     }
 
     function playAudio() {
@@ -832,11 +903,14 @@
             reel.style.transform = `translateX(${targetTranslateX()}px)`;
             reel.offsetHeight;
             reel.style.transition = '';
+        } else {
+            setReelToStart();
         }
     });
 
     spinButton?.addEventListener('click', spin);
     sizeCanvas();
+    setReelToStart();
     tick();
 </script>
 </body>

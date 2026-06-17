@@ -108,7 +108,7 @@ class FortuneTwoController extends Controller
     {
         $items = collect();
         $beforeCount = self::TARGET_START_INDEX;
-        $afterCount = self::VISIBLE_SLOTS + 8;
+        $afterCount = 42;
 
         for ($i = 0; $i < $beforeCount; $i++) {
             $items->push($this->presentProduct($this->randomProduct($products)));
