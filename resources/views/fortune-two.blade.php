@@ -1,10 +1,4 @@
 @php
-    $prizeWord = match ($selectedCount) {
-        1 => 'приз',
-        3 => 'призи',
-        default => 'призів',
-    };
-    $arrowLabel = $selectedCount === 1 ? 'Ваш приз' : 'Ваші призи';
     $firstArrowSlot = $arrowSlotIndexes[0] ?? intdiv($visibleSlots, 2);
 @endphp
 <!DOCTYPE html>
@@ -25,8 +19,8 @@
 
         body {
             margin: 0;
-            overflow-x: hidden;
-            background: #08090b;
+            overflow: hidden;
+            background: #07080d;
             color: #ffffff;
             font-family: Arial, sans-serif;
             letter-spacing: 0;
@@ -39,104 +33,72 @@
 
         .fortune2 {
             --accent: #4f46e5;
-            --accent-2: #12b9c9;
-            --warning: #ffcf5a;
-            --danger: #eb3349;
+            --accent-2: #00d4ff;
+            --gold: #ffcf5a;
+            --hot: #ff3d68;
             --visible-slots: 7;
             --spin-duration: 11.8s;
             position: relative;
             min-height: 100vh;
-            display: grid;
-            grid-template-rows: auto 1fr auto;
-            gap: 18px;
-            padding: clamp(18px, 3vw, 34px);
             isolation: isolate;
             overflow: hidden;
+            background:
+                radial-gradient(circle at 50% 36%, rgba(0, 212, 255, 0.22), transparent 24%),
+                radial-gradient(circle at 18% 18%, rgba(255, 61, 104, 0.2), transparent 26%),
+                radial-gradient(circle at 78% 82%, rgba(255, 207, 90, 0.15), transparent 24%),
+                linear-gradient(180deg, #121421, #07080d 72%);
         }
 
         .fortune2::before {
             content: "";
             position: absolute;
             inset: 0;
-            z-index: -3;
-            background:
-                linear-gradient(135deg, rgba(235, 51, 73, 0.2), transparent 36%),
-                linear-gradient(315deg, rgba(18, 185, 201, 0.22), transparent 40%),
-                linear-gradient(180deg, #111319, #08090b 72%);
+            z-index: -2;
+            opacity: 0.22;
+            background-image:
+                linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+            background-size: 46px 46px;
+            mask-image: radial-gradient(circle at center, #000, transparent 76%);
         }
 
         .fortune2::after {
             content: "";
             position: absolute;
             inset: 0;
-            z-index: -2;
-            opacity: 0.24;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-            background-size: 42px 42px;
-            mask-image: linear-gradient(to bottom, transparent, #000 14%, #000 86%, transparent);
+            z-index: -1;
+            background:
+                linear-gradient(to right, rgba(7, 8, 13, 0.82), transparent 22%, transparent 78%, rgba(7, 8, 13, 0.82)),
+                linear-gradient(to bottom, rgba(7, 8, 13, 0.86), transparent 24%, transparent 78%, rgba(7, 8, 13, 0.86));
+            pointer-events: none;
         }
 
         .fortune2-canvas {
             position: fixed;
             inset: 0;
-            z-index: 30;
+            z-index: 50;
             pointer-events: none;
         }
 
-        .fortune2-header {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-        }
-
-        .fortune2-kicker {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            color: var(--warning);
-            font-size: 13px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .fortune2-kicker::before {
-            content: "";
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--accent-2);
-            box-shadow: 0 0 18px rgba(18, 185, 201, 0.9);
-        }
-
-        .fortune2-title {
-            margin: 0;
-            color: #ffffff;
-            font-size: clamp(36px, 6vw, 78px);
-            line-height: 0.94;
-            font-weight: 950;
-        }
-
-        .fortune2-subtitle {
-            max-width: 620px;
-            margin: 14px 0 0;
-            color: rgba(255, 255, 255, 0.72);
-            font-size: clamp(15px, 1.7vw, 19px);
-            line-height: 1.45;
+        .fortune2-status-zone {
+            position: fixed;
+            top: clamp(14px, 2vw, 26px);
+            left: 50%;
+            z-index: 20;
+            width: min(92vw, 560px);
+            transform: translateX(-50%);
+            display: grid;
+            gap: 10px;
         }
 
         .fortune2-status {
-            max-width: 420px;
             padding: 12px 14px;
             border: 1px solid rgba(255, 255, 255, 0.16);
             border-radius: 8px;
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(7, 8, 13, 0.72);
+            backdrop-filter: blur(14px);
+            text-align: center;
         }
 
         .fortune2-status.is-success {
@@ -145,36 +107,71 @@
         }
 
         .fortune2-stage {
-            position: relative;
-            z-index: 2;
+            position: absolute;
+            inset: 0;
+            z-index: 5;
             display: grid;
-            align-content: center;
-            min-height: 460px;
+            place-items: center;
+            padding: clamp(16px, 4vw, 48px);
+            transition: opacity 540ms ease, transform 700ms ease, filter 700ms ease;
         }
 
-        .fortune2-arrow-title {
-            width: fit-content;
-            margin: 0 auto;
-            padding: 10px 24px;
-            border-radius: 8px 8px 0 0;
-            color: #ffffff;
-            background: var(--accent);
-            font-weight: 800;
-            text-align: center;
-            box-shadow: 0 -12px 36px rgba(79, 70, 229, 0.24);
+        .fortune2.is-revealed .fortune2-stage {
+            opacity: 0;
+            transform: translateY(-58px) scale(0.94);
+            filter: blur(8px);
+            pointer-events: none;
+            transition-delay: 640ms;
+        }
+
+        .fortune2-machine {
+            position: relative;
+            width: min(96vw, 1280px);
+            padding: clamp(16px, 2.2vw, 28px);
+            border-radius: 8px;
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.03)),
+                rgba(16, 18, 28, 0.86);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow:
+                0 34px 90px rgba(0, 0, 0, 0.56),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+        }
+
+        .fortune2-machine::before,
+        .fortune2-machine::after {
+            content: "";
+            position: absolute;
+            left: clamp(20px, 3vw, 42px);
+            right: clamp(20px, 3vw, 42px);
+            height: 10px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.76), rgba(255, 207, 90, 0.76), transparent);
+            filter: blur(0.2px);
+            opacity: 0.82;
+        }
+
+        .fortune2-machine::before {
+            top: 9px;
+        }
+
+        .fortune2-machine::after {
+            bottom: 9px;
         }
 
         .fortune2-reel-wrap {
             position: relative;
-            width: min(100%, 1280px);
-            margin: 0 auto;
+            width: 100%;
             overflow: hidden;
-            border-top: 8px solid var(--accent);
-            border-bottom: 8px solid var(--accent);
-            background: var(--accent);
+            border-radius: 8px;
+            padding: 10px 0;
+            background:
+                linear-gradient(90deg, rgba(7, 8, 13, 0.95), rgba(25, 29, 45, 0.72), rgba(7, 8, 13, 0.95)),
+                #10121c;
+            border: 1px solid rgba(255, 255, 255, 0.18);
             box-shadow:
-                0 28px 80px rgba(0, 0, 0, 0.44),
-                0 0 0 1px rgba(255, 255, 255, 0.12);
+                inset 0 0 42px rgba(0, 0, 0, 0.62),
+                0 18px 44px rgba(0, 0, 0, 0.36);
         }
 
         .fortune2-reel-wrap::before,
@@ -190,12 +187,12 @@
 
         .fortune2-reel-wrap::before {
             left: 0;
-            background: linear-gradient(to right, #08090b 12%, transparent);
+            background: linear-gradient(to right, #07080d 16%, transparent);
         }
 
         .fortune2-reel-wrap::after {
             right: 0;
-            background: linear-gradient(to left, #08090b 12%, transparent);
+            background: linear-gradient(to left, #07080d 16%, transparent);
         }
 
         .fortune2-arrows {
@@ -210,12 +207,12 @@
             top: 0;
             bottom: 0;
             left: var(--arrow-left);
-            width: 5px;
+            width: 4px;
             transform: translateX(-50%);
             background: #ffffff;
             box-shadow:
-                0 0 0 2px rgba(79, 70, 229, 0.72),
-                0 0 26px rgba(255, 255, 255, 0.72);
+                0 0 0 2px rgba(255, 207, 90, 0.74),
+                0 0 34px rgba(255, 207, 90, 0.88);
         }
 
         .fortune2-arrow::before,
@@ -232,12 +229,12 @@
 
         .fortune2-arrow::before {
             top: 0;
-            border-top: 30px solid #ffffff;
+            border-top: 30px solid var(--gold);
         }
 
         .fortune2-arrow::after {
             bottom: 0;
-            border-bottom: 30px solid #ffffff;
+            border-bottom: 30px solid var(--gold);
         }
 
         .fortune2-reel {
@@ -254,7 +251,7 @@
             flex: 0 0 calc(100% / var(--visible-slots));
             position: relative;
             aspect-ratio: 1;
-            padding: clamp(8px, 1.3vw, 14px);
+            padding: clamp(7px, 1.1vw, 13px);
         }
 
         .fortune2-item-inner {
@@ -264,45 +261,36 @@
             overflow: hidden;
             border-radius: 8px;
             background: #ffffff;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.32);
+            box-shadow:
+                inset 0 0 0 1px rgba(255, 255, 255, 0.34),
+                0 12px 26px rgba(0, 0, 0, 0.28);
+        }
+
+        .fortune2-item-inner::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(145deg, rgba(255, 255, 255, 0.32), transparent 32%),
+                linear-gradient(to top, rgba(0, 0, 0, 0.18), transparent 42%);
+            pointer-events: none;
         }
 
         .fortune2-item img {
             width: 100%;
             height: 100%;
             object-fit: cover;
-        }
-
-        .fortune2-item span {
-            position: absolute;
-            left: 8px;
-            right: 8px;
-            bottom: 8px;
-            min-height: 34px;
-            display: grid;
-            align-items: center;
-            padding: 7px 8px;
-            border-radius: 8px;
-            color: #ffffff;
-            background: rgba(8, 9, 11, 0.76);
-            font-size: clamp(11px, 1.25vw, 15px);
-            font-weight: 800;
-            line-height: 1.15;
-            text-align: center;
-        }
-
-        .fortune2-item.is-winning .fortune2-item-inner {
-            outline: 0 solid rgba(255, 207, 90, 0);
+            transform: scale(1.02);
         }
 
         .fortune2.is-revealed .fortune2-item.is-winning .fortune2-item-inner {
-            animation: winner-glow 1.2s ease-out forwards;
+            animation: winner-lift 980ms cubic-bezier(0.18, 1.25, 0.22, 1) forwards;
         }
 
         .fortune2-controls {
             display: flex;
             justify-content: center;
-            margin-top: 26px;
+            margin-top: 24px;
         }
 
         .fortune2-spin {
@@ -310,13 +298,15 @@
             min-height: 56px;
             border: 0;
             border-radius: 8px;
-            color: #ffffff;
-            background: var(--accent);
+            color: #10121c;
+            background: linear-gradient(135deg, #ffffff, var(--gold));
             cursor: pointer;
             font-size: 18px;
             font-weight: 900;
             text-transform: uppercase;
-            box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.72);
+            box-shadow:
+                0 18px 30px rgba(255, 207, 90, 0.24),
+                0 0 0 0 rgba(255, 207, 90, 0.6);
             animation: spin-pulse 1.6s infinite;
         }
 
@@ -327,86 +317,128 @@
         }
 
         .fortune2-result {
-            position: relative;
-            z-index: 2;
+            position: absolute;
+            inset: 0;
+            z-index: 10;
             display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            gap: 18px;
-            align-items: end;
+            place-items: center;
+            padding: clamp(18px, 4vw, 54px);
+            opacity: 0;
+            transform: translateY(34px) scale(0.96);
+            pointer-events: none;
+            transition: opacity 440ms ease, transform 600ms cubic-bezier(0.18, 1.12, 0.22, 1);
+            transition-delay: 840ms;
+        }
+
+        .fortune2.is-revealed .fortune2-result {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+        }
+
+        .fortune2-result-inner {
+            display: grid;
+            justify-items: center;
+            gap: 22px;
+            width: min(100%, 1180px);
         }
 
         .fortune2-prizes {
             display: grid;
-            grid-template-columns: repeat(var(--prize-count), minmax(110px, 180px));
-            gap: 12px;
-            align-items: stretch;
-            opacity: 0;
-            transform: translateY(18px);
-            pointer-events: none;
-        }
-
-        .fortune2.is-revealed .fortune2-prizes {
-            opacity: 1;
-            transform: translateY(0);
-            pointer-events: auto;
-            transition: opacity 360ms ease, transform 360ms ease;
+            grid-template-columns: repeat(var(--prize-count), minmax(130px, 210px));
+            justify-content: center;
+            gap: clamp(12px, 2vw, 22px);
+            width: fit-content;
+            max-width: 100%;
         }
 
         .fortune2-prize {
             position: relative;
-            min-height: 168px;
-            padding: 10px;
+            min-height: 220px;
+            padding: 12px;
             overflow: hidden;
             border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 18px 30px rgba(0, 0, 0, 0.24);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.06)),
+                rgba(12, 14, 22, 0.88);
+            box-shadow:
+                0 26px 54px rgba(0, 0, 0, 0.46),
+                0 0 0 1px rgba(255, 207, 90, 0.2);
+            opacity: 0;
+            transform: translateY(70px) scale(0.84);
+        }
+
+        .fortune2.is-revealed .fortune2-prize {
+            animation: prize-rise 760ms cubic-bezier(0.18, 1.25, 0.22, 1) forwards;
+            animation-delay: calc(980ms + var(--i) * 120ms);
+        }
+
+        .fortune2-prize::before {
+            content: "";
+            position: absolute;
+            inset: -1px;
+            border-radius: inherit;
+            background: linear-gradient(135deg, rgba(255, 207, 90, 0.7), transparent 36%, rgba(0, 212, 255, 0.54));
+            opacity: 0.28;
+            pointer-events: none;
         }
 
         .fortune2-prize img {
+            position: relative;
+            z-index: 1;
             width: 100%;
             aspect-ratio: 1;
             object-fit: cover;
             border-radius: 8px;
             background: #ffffff;
+            box-shadow: 0 14px 24px rgba(0, 0, 0, 0.28);
         }
 
         .fortune2-prize h2 {
-            margin: 10px 0 0;
+            position: relative;
+            z-index: 1;
+            margin: 12px 0 0;
             color: #ffffff;
-            font-size: 15px;
+            font-size: clamp(15px, 1.5vw, 19px);
             line-height: 1.2;
+            text-align: center;
         }
 
         .fortune2-prize small {
+            position: relative;
+            z-index: 1;
             display: block;
-            margin-top: 5px;
-            color: rgba(255, 255, 255, 0.62);
+            margin-top: 7px;
+            color: rgba(255, 255, 255, 0.64);
+            font-size: 13px;
+            text-align: center;
         }
 
         .fortune2-claim {
             display: flex;
+            flex-wrap: wrap;
             align-items: center;
+            justify-content: center;
             gap: 12px;
             opacity: 0;
             transform: translateY(18px);
-            pointer-events: none;
         }
 
         .fortune2.is-revealed .fortune2-claim {
             opacity: 1;
             transform: translateY(0);
-            pointer-events: auto;
             transition: opacity 360ms ease, transform 360ms ease;
+            transition-delay: 1.3s;
         }
 
         .fortune2-claim button {
             min-height: 52px;
-            padding: 0 22px;
+            padding: 0 24px;
             border: 0;
             border-radius: 8px;
-            color: #111319;
-            background: var(--warning);
+            color: #10121c;
+            background: var(--gold);
             cursor: pointer;
             font-weight: 900;
             box-shadow: 0 14px 24px rgba(255, 207, 90, 0.3);
@@ -418,23 +450,23 @@
         }
 
         .fortune2-claim span {
-            max-width: 210px;
             color: rgba(255, 255, 255, 0.68);
             font-size: 14px;
             line-height: 1.35;
+            text-align: center;
         }
 
         .fortune2-picker {
             position: fixed;
             right: clamp(14px, 2.4vw, 28px);
             bottom: clamp(14px, 2.4vw, 28px);
-            z-index: 40;
+            z-index: 60;
             display: flex;
             align-items: center;
             gap: 8px;
             padding: 8px;
             border-radius: 8px;
-            background: rgba(8, 9, 11, 0.8);
+            background: rgba(7, 8, 13, 0.8);
             border: 1px solid rgba(255, 255, 255, 0.18);
             backdrop-filter: blur(14px);
             box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
@@ -461,7 +493,7 @@
         }
 
         .fortune2-picker a.is-active {
-            color: #111319;
+            color: #10121c;
             background: #ffffff;
         }
 
@@ -472,75 +504,79 @@
 
         @keyframes spin-pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.72);
+                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0.6);
             }
 
             70% {
-                box-shadow: 0 0 0 14px rgba(79, 70, 229, 0);
+                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 14px rgba(255, 207, 90, 0);
             }
 
             100% {
-                box-shadow: 0 0 0 0 rgba(79, 70, 229, 0);
+                box-shadow: 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0);
             }
         }
 
-        @keyframes winner-glow {
+        @keyframes winner-lift {
             0% {
-                outline-width: 0;
-                transform: scale(1);
-                box-shadow: 0 0 0 rgba(255, 207, 90, 0);
+                transform: translateY(0) scale(1);
+                box-shadow: 0 12px 26px rgba(0, 0, 0, 0.28);
             }
 
-            44% {
-                outline-width: 8px;
-                transform: scale(1.04);
-                box-shadow: 0 0 44px rgba(255, 207, 90, 0.9);
+            70% {
+                transform: translateY(-42px) scale(1.1);
+                box-shadow: 0 0 46px rgba(255, 207, 90, 0.82);
             }
 
             100% {
-                outline-width: 4px;
-                outline-color: rgba(255, 207, 90, 0.92);
-                transform: scale(1);
-                box-shadow: 0 0 34px rgba(255, 207, 90, 0.48);
+                transform: translateY(-28px) scale(1.06);
+                box-shadow: 0 0 34px rgba(255, 207, 90, 0.52);
+            }
+        }
+
+        @keyframes prize-rise {
+            0% {
+                opacity: 0;
+                transform: translateY(70px) scale(0.84);
+            }
+
+            72% {
+                opacity: 1;
+                transform: translateY(-10px) scale(1.04);
+            }
+
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
         }
 
         @media (max-width: 900px) {
-            .fortune2 {
-                padding-bottom: 108px;
-            }
-
-            .fortune2-header,
-            .fortune2-result {
-                grid-template-columns: 1fr;
-                display: grid;
-            }
-
-            .fortune2-stage {
-                min-height: 360px;
+            .fortune2-machine {
+                width: min(96vw, 820px);
             }
 
             .fortune2-prizes {
-                grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
+                width: min(100%, 760px);
             }
         }
 
         @media (max-width: 640px) {
-            .fortune2 {
-                --visible-slots: 3;
-                padding: 16px 12px 112px;
+            .fortune2-stage {
+                padding: 12px;
             }
 
-            .fortune2-title {
-                font-size: 38px;
+            .fortune2-machine {
+                padding: 12px;
             }
 
-            .fortune2-arrow-title {
-                padding: 8px 18px;
+            .fortune2-spin {
+                min-width: 170px;
+                min-height: 50px;
             }
 
-            .fortune2-item span {
-                display: none;
+            .fortune2-prize {
+                min-height: 0;
             }
 
             .fortune2-picker {
@@ -565,82 +601,74 @@
     <canvas class="fortune2-canvas" data-confetti></canvas>
     <audio src="{{ asset('fort/audio/onion-capers-by-kevin-macleod-from-filmmusic-io.mp3') }}" data-audio preload="auto"></audio>
 
-    <header class="fortune2-header">
-        <div>
-            <div class="fortune2-kicker">Cherry Camp Prize Reel</div>
-            <h1 class="fortune2-title">Колесо фортуни 2.0</h1>
-            <p class="fortune2-subtitle">
-                {{ $selectedCount }} {{ $prizeWord }} у цьому запуску. Стрічка зупиниться рівно на тих товарах, які можна забрати.
-            </p>
-        </div>
+    <div class="fortune2-status-zone">
+        @if(session('success'))
+            <div class="fortune2-status is-success">{{ session('success') }}</div>
+        @endif
 
-        <div>
-            @if(session('success'))
-                <div class="fortune2-status is-success">{{ session('success') }}</div>
-            @endif
+        @if($errors->any())
+            <div class="fortune2-status">{{ $errors->first() }}</div>
+        @endif
 
-            @if($errors->any())
-                <div class="fortune2-status">{{ $errors->first() }}</div>
-            @endif
-
-            @if(!$canSpin)
-                <div class="fortune2-status">
-                    Доступно різних призів: {{ $availableUnique }}. Для цього режиму потрібно {{ $selectedCount }}.
-                </div>
-            @endif
-        </div>
-    </header>
+        @if(!$canSpin)
+            <div class="fortune2-status">
+                Доступно різних призів: {{ $availableUnique }}. Для цього режиму потрібно {{ $selectedCount }}.
+            </div>
+        @endif
+    </div>
 
     <section class="fortune2-stage" aria-label="Прокрут призів">
-        <div class="fortune2-arrow-title">{{ $arrowLabel }}</div>
-        <div class="fortune2-reel-wrap" data-reel-wrap>
-            <div class="fortune2-arrows" aria-hidden="true">
-                @foreach($arrowSlotIndexes as $slot)
-                    <span
-                        class="fortune2-arrow"
-                        style="--arrow-left: {{ (($slot + 0.5) / $visibleSlots) * 100 }}%;"
-                    ></span>
-                @endforeach
+        <div class="fortune2-machine">
+            <div class="fortune2-reel-wrap" data-reel-wrap>
+                <div class="fortune2-arrows" aria-hidden="true">
+                    @foreach($arrowSlotIndexes as $slot)
+                        <span
+                            class="fortune2-arrow"
+                            style="--arrow-left: {{ (($slot + 0.5) / $visibleSlots) * 100 }}%;"
+                        ></span>
+                    @endforeach
+                </div>
+                <ul class="fortune2-reel" data-reel>
+                    @foreach($reelItems as $index => $item)
+                        <li class="fortune2-item {{ $index >= $targetStartIndex && $index < ($targetStartIndex + $selectedCount) ? 'is-winning' : '' }}">
+                            <div class="fortune2-item-inner">
+                                <img src="{{ $item['image_url'] }}" alt="{{ $item['name'] }}">
+                            </div>
+                        </li>
+                    @endforeach
+                </ul>
             </div>
-            <ul class="fortune2-reel" data-reel>
-                @foreach($reelItems as $index => $item)
-                    <li class="fortune2-item {{ $index >= $targetStartIndex && $index < ($targetStartIndex + $selectedCount) ? 'is-winning' : '' }}">
-                        <div class="fortune2-item-inner">
-                            <img src="{{ $item['image_url'] }}" alt="{{ $item['name'] }}">
-                            <span>{{ $item['name'] }}</span>
-                        </div>
-                    </li>
-                @endforeach
-            </ul>
-        </div>
 
-        <div class="fortune2-controls">
-            <button type="button" class="fortune2-spin" data-spin {{ $canSpin ? '' : 'disabled' }}>
-                Крутити
-            </button>
+            <div class="fortune2-controls">
+                <button type="button" class="fortune2-spin" data-spin {{ $canSpin ? '' : 'disabled' }}>
+                    Крутити
+                </button>
+            </div>
         </div>
     </section>
 
     <section class="fortune2-result" aria-live="polite">
         @if($prizes->isNotEmpty())
-            <div class="fortune2-prizes">
-                @foreach($prizes as $prize)
-                    <article class="fortune2-prize">
-                        <img src="{{ $prize['image_url'] }}" alt="{{ $prize['name'] }}">
-                        <h2>{{ $prize['name'] }}</h2>
-                        <small>Залишок до списання: {{ $prize['quantity'] }}</small>
-                    </article>
-                @endforeach
-            </div>
+            <div class="fortune2-result-inner">
+                <div class="fortune2-prizes">
+                    @foreach($prizes as $index => $prize)
+                        <article class="fortune2-prize" style="--i: {{ $index }};">
+                            <img src="{{ $prize['image_url'] }}" alt="{{ $prize['name'] }}">
+                            <h2>{{ $prize['name'] }}</h2>
+                            <small>Залишок до списання: {{ $prize['quantity'] }}</small>
+                        </article>
+                    @endforeach
+                </div>
 
-            <form action="{{ route('fortune.two.catch') }}" method="POST" class="fortune2-claim">
-                @csrf
-                @foreach($prizes as $prize)
-                    <input type="hidden" name="product_ids[]" value="{{ $prize['id'] }}">
-                @endforeach
-                <button type="submit" data-claim disabled>Забрати приз</button>
-                <span>Після натискання кожен приз спишеться з бази на 1.</span>
-            </form>
+                <form action="{{ route('fortune.two.catch') }}" method="POST" class="fortune2-claim">
+                    @csrf
+                    @foreach($prizes as $prize)
+                        <input type="hidden" name="product_ids[]" value="{{ $prize['id'] }}">
+                    @endforeach
+                    <button type="submit" data-claim disabled>Забрати приз</button>
+                    <span>Після натискання кожен приз спишеться з бази на 1.</span>
+                </form>
+            </div>
         @endif
     </section>
 
@@ -685,8 +713,13 @@
         ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
     }
 
+    function currentVisibleSlots() {
+        return Number(getComputedStyle(app).getPropertyValue('--visible-slots')) || visibleSlots;
+    }
+
     function targetTranslateX() {
-        const slotWidth = reelWrap.getBoundingClientRect().width / visibleSlots;
+        const slots = currentVisibleSlots();
+        const slotWidth = reelWrap.getBoundingClientRect().width / slots;
 
         return (firstArrowSlot - targetStartIndex) * slotWidth;
     }
@@ -783,7 +816,7 @@
 
         window.setTimeout(() => {
             app.classList.add('is-revealed');
-            burst(160, window.innerWidth * 0.5, window.innerHeight * 0.5);
+            burst(190, window.innerWidth * 0.5, window.innerHeight * 0.5);
 
             if (claimButton) {
                 claimButton.disabled = false;
