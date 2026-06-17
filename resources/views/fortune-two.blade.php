@@ -99,11 +99,18 @@
             background: rgba(7, 8, 13, 0.72);
             backdrop-filter: blur(14px);
             text-align: center;
+            transition: opacity 320ms ease, transform 320ms ease, visibility 320ms ease;
         }
 
         .fortune2-status.is-success {
             border-color: rgba(58, 213, 133, 0.46);
             color: #a8ffc8;
+        }
+
+        .fortune2-status.is-hidden {
+            opacity: 0;
+            transform: translateY(-10px);
+            visibility: hidden;
         }
 
         .fortune2-stage {
@@ -398,6 +405,14 @@
             max-width: 100%;
         }
 
+        .fortune2-prizes.is-count-1 {
+            grid-template-columns: minmax(220px, 320px);
+        }
+
+        .fortune2-prizes.is-count-3 {
+            grid-template-columns: repeat(3, minmax(170px, 260px));
+        }
+
         .fortune2-prize {
             position: relative;
             min-height: 220px;
@@ -615,6 +630,14 @@
                 grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
                 width: min(100%, 760px);
             }
+
+            .fortune2-prizes.is-count-1 {
+                grid-template-columns: minmax(210px, 320px);
+            }
+
+            .fortune2-prizes.is-count-3 {
+                grid-template-columns: repeat(3, minmax(140px, 1fr));
+            }
         }
 
         @media (max-width: 640px) {
@@ -633,6 +656,10 @@
 
             .fortune2-prize {
                 min-height: 0;
+            }
+
+            .fortune2-prizes.is-count-3 {
+                grid-template-columns: repeat(auto-fit, minmax(126px, 1fr));
             }
 
             .fortune2-picker {
@@ -659,7 +686,7 @@
 
     <div class="fortune2-status-zone">
         @if(session('success'))
-            <div class="fortune2-status is-success">{{ session('success') }}</div>
+            <div class="fortune2-status is-success" data-auto-hide>{{ session('success') }}</div>
         @endif
 
         @if($errors->any())
@@ -707,7 +734,7 @@
     <section class="fortune2-result" aria-live="polite">
         @if($prizes->isNotEmpty())
             <div class="fortune2-result-inner">
-                <div class="fortune2-prizes">
+                <div class="fortune2-prizes is-count-{{ $selectedCount }}">
                     @foreach($prizes as $index => $prize)
                         <article class="fortune2-prize" style="--i: {{ $index }};">
                             <img src="{{ $prize['image_url'] }}" alt="{{ $prize['name'] }}">
@@ -917,6 +944,15 @@
     });
 
     spinButton?.addEventListener('click', spin);
+    document.querySelectorAll('[data-auto-hide]').forEach((element) => {
+        window.setTimeout(() => {
+            element.classList.add('is-hidden');
+        }, 3500);
+
+        window.setTimeout(() => {
+            element.remove();
+        }, 3900);
+    });
     sizeCanvas();
     setReelToStart();
     tick();
