@@ -563,6 +563,38 @@
             opacity: 0.35;
         }
 
+        .fortune2-average {
+            position: fixed;
+            left: clamp(14px, 2.4vw, 28px);
+            bottom: clamp(14px, 2.4vw, 28px);
+            z-index: 60;
+            min-width: 210px;
+            padding: 11px 14px;
+            border-radius: 8px;
+            background:
+                linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.04)),
+                rgba(7, 8, 13, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            backdrop-filter: blur(14px);
+            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
+        }
+
+        .fortune2-average span {
+            display: block;
+            color: rgba(255, 255, 255, 0.58);
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        .fortune2-average strong {
+            display: block;
+            margin-top: 4px;
+            color: #ffffff;
+            font-size: 22px;
+            line-height: 1.1;
+        }
+
         @keyframes spin-pulse {
             0% {
                 box-shadow: 0 0 0 16px rgba(7, 8, 13, 0.42), 0 18px 30px rgba(255, 207, 90, 0.24), 0 0 0 0 rgba(255, 207, 90, 0.6);
@@ -666,6 +698,15 @@
                 left: 50%;
                 right: auto;
                 transform: translateX(-50%);
+            }
+
+            .fortune2-average {
+                left: 50%;
+                bottom: 78px;
+                min-width: 0;
+                width: min(92vw, 280px);
+                transform: translateX(-50%);
+                text-align: center;
             }
         }
     </style>
@@ -771,6 +812,11 @@
             </a>
         @endforeach
     </nav>
+
+    <aside class="fortune2-average" aria-label="Середня цінність продукції">
+        <span>Середня цінність продукції</span>
+        <strong>{{ number_format($averageValue, 2, '.', ' ') }}</strong>
+    </aside>
 </main>
 
 <script>

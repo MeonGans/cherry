@@ -24,6 +24,9 @@ class FortuneTwoController extends Controller
 
         $products = Product::where('quantity', '>', 0)->orderBy('name')->get();
         $availableUnique = $products->count();
+        $totalQuantity = $products->sum('quantity');
+        $totalValue = $products->sum(fn (Product $product) => $product->quantity * $product->value);
+        $averageValue = $totalQuantity > 0 ? $totalValue / $totalQuantity : 0;
         $canSpin = $availableUnique >= $selectedCount;
         $prizes = $canSpin ? $this->pickUniquePrizes($products, $selectedCount) : collect();
         $reelItems = $canSpin ? $this->buildReelItems($products, $prizes, $selectedCount) : collect();
@@ -35,6 +38,7 @@ class FortuneTwoController extends Controller
             'allowedCounts' => self::PRIZE_COUNTS,
             'availableCounts' => $availableCounts,
             'availableUnique' => $availableUnique,
+            'averageValue' => $averageValue,
             'canSpin' => $canSpin,
             'selectedCount' => $selectedCount,
             'prizes' => $prizes->map(fn (Product $product) => $this->presentProduct($product))->values(),
