@@ -61,17 +61,17 @@ class MusicClipController extends Controller
 
             if (!$song || $song->type !== MusicClipCard::TYPE_SONG || $song->quantity <= 0) {
                 throw ValidationException::withMessages([
-                    'song_id' => 'Обрана пісня вже недоступна. Запустіть прокрут ще раз.',
+                    'song_id' => 'Обраний кліп вже недоступний. Запустіть прокрут ще раз.',
                 ]);
             }
 
-            $genre->decrement('quantity');
-            $song->decrement('quantity');
+            $genre->update(['quantity' => 0]);
+            $song->update(['quantity' => 0]);
         });
 
         return redirect()
             ->route('music.clip')
-            ->with('success', 'Жанр і пісню списано з бази.');
+            ->with('success', 'Жанр і кліп анульовано в системі.');
     }
 
     private function availableCards(string $type): Collection

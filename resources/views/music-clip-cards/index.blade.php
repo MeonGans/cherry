@@ -5,11 +5,11 @@
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h5 class="text-lg font-semibold dark:text-white-light">Картки кліпу</h5>
-                <p class="text-sm text-white-dark">Керуйте жанрами та піснями для сторінки “Музикальний кліп”.</p>
+                <p class="text-sm text-white-dark">Керуйте жанрами та кліпами для сторінки “музикальний кліп”.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('music-clip-cards.create', ['type' => \App\Models\MusicClipCard::TYPE_GENRE]) }}" class="btn btn-primary">Додати жанр</a>
-                <a href="{{ route('music-clip-cards.create', ['type' => \App\Models\MusicClipCard::TYPE_SONG]) }}" class="btn btn-outline-primary">Додати пісню</a>
+                <a href="{{ route('music-clip-cards.create', ['type' => \App\Models\MusicClipCard::TYPE_SONG]) }}" class="btn btn-outline-primary">Додати кліп</a>
             </div>
         </div>
 
@@ -46,7 +46,7 @@
                     'total' => $totals[\App\Models\MusicClipCard::TYPE_GENRE],
                 ],
                 [
-                    'title' => 'Пісні',
+                    'title' => 'Кліпи',
                     'caption' => 'Нижня стрічка. Крутиться зліва направо.',
                     'cards' => $songs,
                     'type' => \App\Models\MusicClipCard::TYPE_SONG,
@@ -79,7 +79,7 @@
                             <tr>
                                 <th class="w-20">#</th>
                                 <th>Картка</th>
-                                <th class="w-40">Кількість</th>
+                                <th class="w-40">Шанс появи</th>
                                 <th class="w-64 text-right">Дії</th>
                             </tr>
                             </thead>

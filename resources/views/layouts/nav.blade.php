@@ -188,7 +188,7 @@
                             <a href="{{ route('music-clip-cards.index') }}" class="{{ Request::routeIs('music-clip-cards.*') ? 'active' : '' }}">Картки кліпу</a>
                         </li>
                         <li>
-                            <a href="{{ route('music.clip') }}" class="{{ Request::routeIs('music.clip') ? 'active' : '' }}" target="_blank">Музикальний кліп</a>
+                            <a href="{{ route('music.clip') }}" class="{{ Request::routeIs('music.clip') ? 'active' : '' }}" target="_blank">музикальний кліп</a>
                         </li>
                     </ul>
                 </li>

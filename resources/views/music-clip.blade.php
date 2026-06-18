@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Музикальний кліп</title>
+    <title>музикальний кліп</title>
     <style>
         * {
             box-sizing: border-box;
@@ -95,7 +95,7 @@
             color: #ffffff;
             font-size: clamp(24px, 3vw, 48px);
             line-height: 1;
-            text-transform: uppercase;
+            text-transform: none;
             text-shadow:
                 0 0 24px rgba(30, 215, 255, 0.52),
                 0 0 42px rgba(255, 63, 122, 0.32);
@@ -676,7 +676,7 @@
     <audio src="{{ asset('fort/audio/onion-capers-by-kevin-macleod-from-filmmusic-io.mp3') }}" data-audio preload="auto"></audio>
 
     <header class="clip-topbar">
-        <h1 class="clip-title">Музикальний кліп</h1>
+        <h1 class="clip-title">музикальний кліп</h1>
     </header>
 
     <div class="clip-status-zone">
@@ -690,12 +690,12 @@
 
         @if(!$canSpin)
             <div class="clip-status">
-                Для старту потрібен хоча б 1 доступний жанр і 1 доступна пісня.
+                Для старту потрібен хоча б 1 доступний жанр і 1 доступний кліп.
             </div>
         @endif
     </div>
 
-    <section class="clip-stage" aria-label="Прокрут жанру та пісні">
+    <section class="clip-stage" aria-label="Прокрут жанру та кліпу">
         <div class="clip-machine">
             <div class="clip-row is-top">
                 <div class="clip-flow" aria-hidden="true"></div>
@@ -749,7 +749,7 @@
 
                     <article class="clip-result-card" style="--i: 1;">
                         <img src="{{ $song['image_url'] }}" alt="{{ $song['name'] }}">
-                        <span>Пісня</span>
+                        <span>Кліп</span>
                         <h2>{{ $song['name'] }}</h2>
                     </article>
                 </div>
@@ -758,8 +758,8 @@
                     @csrf
                     <input type="hidden" name="genre_id" value="{{ $genre['id'] }}">
                     <input type="hidden" name="song_id" value="{{ $song['id'] }}">
-                    <button type="submit" data-claim disabled>Забрати результат</button>
-                    <span>Після натискання жанр і пісня спишуться з бази на 1.</span>
+                    <button type="submit" data-claim disabled>Забрати кліп</button>
+                    <span>Після натискання жанр і кліп стануть недоступними в системі.</span>
                 </form>
             </div>
         @endif
@@ -771,7 +771,7 @@
             <strong>{{ $genreTotal }}</strong>
         </div>
         <div>
-            <span>Пісень</span>
+            <span>Кліпів</span>
             <strong>{{ $songTotal }}</strong>
         </div>
     </aside>

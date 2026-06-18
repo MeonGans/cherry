@@ -14,7 +14,7 @@ class MusicClipCard extends Model
 
     public const TYPES = [
         self::TYPE_GENRE => 'Жанр',
-        self::TYPE_SONG => 'Пісня',
+        self::TYPE_SONG => 'Кліп',
     ];
 
     protected $fillable = ['type', 'name', 'quantity', 'image_path'];

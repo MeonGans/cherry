@@ -5,7 +5,7 @@
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h5 class="text-lg font-semibold dark:text-white-light">Додати картку кліпу</h5>
-                <p class="text-sm text-white-dark">Нова картка одразу буде доступна для стрічок “Музикального кліпу”.</p>
+                <p class="text-sm text-white-dark">Нова картка одразу буде доступна для стрічок “музикальний кліп”.</p>
             </div>
             <a href="{{ route('music-clip-cards.index') }}" class="btn btn-outline-primary">До списку</a>
         </div>
@@ -45,7 +45,7 @@
             </div>
 
             <div>
-                <label for="quantity" class="mb-2 block font-semibold">Кількість</label>
+                <label for="quantity" class="mb-2 block font-semibold">Шанс появи</label>
                 <input type="number" name="quantity" id="quantity" class="form-input" min="0" step="1" value="{{ old('quantity', 0) }}" required>
             </div>
 
