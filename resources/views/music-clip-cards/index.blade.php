@@ -5,7 +5,7 @@
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h5 class="text-lg font-semibold dark:text-white-light">Картки кліпу</h5>
-                <p class="text-sm text-white-dark">Керуйте жанрами та кліпами для сторінки “музикальний кліп”.</p>
+                <p class="text-sm text-white-dark">Керуйте жанрами та кліпами для сторінки “Музичний кліп”.</p>
             </div>
             <div class="flex flex-wrap gap-2">
                 <a href="{{ route('music-clip-cards.create', ['type' => \App\Models\MusicClipCard::TYPE_GENRE]) }}" class="btn btn-primary">Додати жанр</a>

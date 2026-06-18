@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>музикальний кліп</title>
+    <title>Музичний кліп</title>
     <style>
         * {
             box-sizing: border-box;
@@ -676,7 +676,7 @@
     <audio src="{{ asset('fort/audio/onion-capers-by-kevin-macleod-from-filmmusic-io.mp3') }}" data-audio preload="auto"></audio>
 
     <header class="clip-topbar">
-        <h1 class="clip-title">музикальний кліп</h1>
+        <h1 class="clip-title">Музичний кліп</h1>
     </header>
 
     <div class="clip-status-zone">

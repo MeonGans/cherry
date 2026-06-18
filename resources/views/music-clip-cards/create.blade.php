@@ -5,7 +5,7 @@
         <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <div>
                 <h5 class="text-lg font-semibold dark:text-white-light">Додати картку кліпу</h5>
-                <p class="text-sm text-white-dark">Нова картка одразу буде доступна для стрічок “музикальний кліп”.</p>
+                <p class="text-sm text-white-dark">Нова картка одразу буде доступна для стрічок “Музичний кліп”.</p>
             </div>
             <a href="{{ route('music-clip-cards.index') }}" class="btn btn-outline-primary">До списку</a>
         </div>
