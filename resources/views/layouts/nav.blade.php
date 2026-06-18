@@ -161,6 +161,37 @@
                         </li>
                     </ul>
                 </li>
+                <li class="menu nav-item">
+                    <button
+                        type="button"
+                        class="nav-link group"
+                        :class="{'active' : activeDropdown === 'clip'}"
+                        @click="activeDropdown === 'clip' ? activeDropdown = null : activeDropdown = 'clip'"
+                    >
+                        <div class="flex items-center">
+                            <svg class="shrink-0 group-hover:!text-primary" width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path opacity="0.5" d="M9 18V5.8C9 4.82 9 4.33 9.32 4.08C9.64 3.83 10.1 3.98 11.03 4.28L17.03 6.22C18.01 6.54 18.5 6.69 18.75 7.08C19 7.47 19 7.98 19 9V15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"></path>
+                                <path d="M7 20C8.65685 20 10 18.8807 10 17.5C10 16.1193 8.65685 15 7 15C5.34315 15 4 16.1193 4 17.5C4 18.8807 5.34315 20 7 20Z" fill="currentColor"></path>
+                                <path d="M17 17C18.6569 17 20 15.8807 20 14.5C20 13.1193 18.6569 12 17 12C15.3431 12 14 13.1193 14 14.5C14 15.8807 15.3431 17 17 17Z" fill="currentColor"></path>
+                            </svg>
+
+                            <span class="text-black ltr:pl-3 rtl:pr-3 dark:text-[#506690] dark:group-hover:text-white-dark">Кліп</span>
+                        </div>
+                        <div class="rtl:rotate-180" :class="{'!rotate-90' : activeDropdown === 'clip'}">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M9 5L15 12L9 19" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                    </button>
+                    <ul x-cloak x-show="activeDropdown === 'clip'" x-collapse class="sub-menu text-gray-500">
+                        <li>
+                            <a href="{{ route('music-clip-cards.index') }}" class="{{ Request::routeIs('music-clip-cards.*') ? 'active' : '' }}">Картки кліпу</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('music.clip') }}" class="{{ Request::routeIs('music.clip') ? 'active' : '' }}" target="_blank">Музикальний кліп</a>
+                        </li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </nav>

@@ -22,6 +22,8 @@ use App\Http\Controllers\ProductController;
 
 use App\Http\Controllers\FortuneController;
 use App\Http\Controllers\FortuneTwoController;
+use App\Http\Controllers\MusicClipCardController;
+use App\Http\Controllers\MusicClipController;
 
 Route::middleware(['admin.auth'])->group(function () {
 
@@ -46,6 +48,12 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::post('/votes/{voteUrl}/add-points', [VoteController::class, 'addPoints'])->name('votes.addPoints');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::resource('products', ProductController::class);
+
+    Route::patch('/clip/cards/{musicClipCard}/quick-update', [MusicClipCardController::class, 'quickUpdate'])->name('music-clip-cards.quick-update');
+    Route::resource('/clip/cards', MusicClipCardController::class)
+        ->parameters(['cards' => 'musicClipCard'])
+        ->except(['show'])
+        ->names('music-clip-cards');
 });
 
 Route::post('/votes', [VoteController::class, 'store'])->name('votes.store');
@@ -60,6 +68,8 @@ Route::get('/fortune', [FortuneController::class, 'index'])->name('fortune');
 Route::post('/fortune/catch', [FortuneController::class, 'catch'])->name('fortune.catch');
 Route::get('/fortune-2', [FortuneTwoController::class, 'index'])->name('fortune.two');
 Route::post('/fortune-2/catch', [FortuneTwoController::class, 'catch'])->name('fortune.two.catch');
+Route::get('/music-clip', [MusicClipController::class, 'index'])->name('music.clip');
+Route::post('/music-clip/catch', [MusicClipController::class, 'catch'])->name('music.clip.catch');
 
 
 use App\Http\Controllers\AdminAuthController;
