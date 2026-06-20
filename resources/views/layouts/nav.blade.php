@@ -75,6 +75,9 @@
                             <a href="{{ route('random_list') }}" class="{{ Request::routeIs('random_list') ? 'active' : '' }}">Рандомний список</a>
                         </li>
                         <li>
+                            <a href="{{ route('sessions.index') }}" class="{{ Request::routeIs('sessions.*') ? 'active' : '' }}">Сесії</a>
+                        </li>
+                        <li>
                             <a href="{{ route('test.show') }}" class="{{ Request::routeIs('test.show') ? 'active' : '' }}">Сортування</a>
                         </li>
                         <li>

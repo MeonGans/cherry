@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Route;
 */
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\SortingTwoController;
+use App\Http\Controllers\SessionController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\ProductController;
 
@@ -32,6 +33,12 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
     Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
+    Route::get('/sessions', [SessionController::class, 'index'])->name('sessions.index');
+    Route::get('/sessions/create', [SessionController::class, 'create'])->name('sessions.create');
+    Route::post('/sessions', [SessionController::class, 'store'])->name('sessions.store');
+    Route::get('/sessions/{session}/users', [SessionController::class, 'users'])->name('sessions.users');
+    Route::patch('/sessions/{session}/activate', [SessionController::class, 'activate'])->name('sessions.activate');
+    Route::patch('/sessions/{session}/deactivate', [SessionController::class, 'deactivate'])->name('sessions.deactivate');
 
     Route::get('/test', [TestController::class, 'showTestForm'])->name('test.show');
     Route::post('/test', [TestController::class, 'handleTestSubmission'])->name('test.handle');
