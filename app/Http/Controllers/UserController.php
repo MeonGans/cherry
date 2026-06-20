@@ -28,7 +28,7 @@ class UserController extends Controller
             $query->where('active', true);
         })->inRandomOrder()->get();
 
-        return view('list', compact('users'));
+        return view('random_list', compact('users'));
     }
 
     public function create()
