@@ -4,15 +4,16 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Place;
+use Illuminate\Support\Str;
 
 class QuestController extends Controller
 {
     private $validPasswords = [
-        'ynoujtxx',
-        'arptydox',
-        'ndsgxysx',
-        'xzbcmpsx',
-        'mpsxjtxx',
+        'хynoujtxx',
+        'хarptydox',
+        'хndsgxysx',
+        'xzbcmpsxх',
+        'хmpsxjtxx',
     ];
 
     public function show()
@@ -23,10 +24,14 @@ class QuestController extends Controller
     public function handle(Request $request)
     {
         $request->validate([
-            'password' => 'required',
+            'password' => ['required', 'string', 'size:9', 'regex:/^[\p{L}]+$/u'],
+        ], [
+            'password.required' => 'Введіть пароль з 9 букв',
+            'password.size' => 'Пароль має містити рівно 9 букв',
+            'password.regex' => 'Пароль має містити тільки букви',
         ]);
 
-        $password = strtolower($request->input('password'));
+        $password = Str::lower(trim($request->input('password')));
 
         if (!in_array($password, $this->validPasswords)) {
             return back()->withErrors(['password' => 'Невірний пароль']);
