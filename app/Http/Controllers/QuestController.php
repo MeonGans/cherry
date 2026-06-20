@@ -84,7 +84,54 @@ class QuestController extends Controller
         ];
 
         $message = $messages[$position] ?? 'Всі місця зайняті';
+        $result = $this->resultPresentation((int) $position);
 
-        return view('quest-result', ['message' => $message]);
+        return view('quest-result', [
+            'message' => $message,
+            'result' => $result,
+            'position' => (int) $position,
+        ]);
+    }
+
+    private function resultPresentation(int $position): array
+    {
+        return match ($position) {
+            1 => [
+                'variant' => 'red',
+                'label' => 'Червоний бокс',
+                'eyebrow' => 'Перший ключ знайдено',
+                'rank' => 'Головна перемога',
+            ],
+            2 => [
+                'variant' => 'silver',
+                'label' => 'Сірий бокс',
+                'eyebrow' => 'Другий ключ відкрито',
+                'rank' => 'Велика перемога',
+            ],
+            3 => [
+                'variant' => 'black',
+                'label' => 'Чорний бокс',
+                'eyebrow' => 'Третій ключ у руках',
+                'rank' => 'Темна перемога',
+            ],
+            4 => [
+                'variant' => 'bonus-strong',
+                'label' => '200 черіків',
+                'eyebrow' => 'Бокси вже забрали',
+                'rank' => 'Компенсаційна перемога',
+            ],
+            5 => [
+                'variant' => 'bonus',
+                'label' => '150 черіків',
+                'eyebrow' => 'Фінал пройдено',
+                'rank' => 'Мала перемога',
+            ],
+            default => [
+                'variant' => 'closed',
+                'label' => 'Фінал закрито',
+                'eyebrow' => 'Усі місця зайняті',
+                'rank' => 'Квест завершено',
+            ],
+        };
     }
 }
