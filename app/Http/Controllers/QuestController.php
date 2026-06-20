@@ -31,13 +31,20 @@ class QuestController extends Controller
             'password.regex' => 'Пароль має містити тільки букви',
         ]);
 
-        $password = Str::lower(trim($request->input('password')));
+        $password = $this->normalizePassword($request->input('password'));
+        $validPasswords = array_map(
+            fn (string $validPassword) => $this->normalizePassword($validPassword),
+            $this->validPasswords
+        );
 
-        if (!in_array($password, $this->validPasswords)) {
+        if (!in_array($password, $validPasswords, true)) {
             return back()->withErrors(['password' => 'Невірний пароль']);
         }
 
-        if (Place::where('password', $password)->exists()) {
+        $passwordAlreadyUsed = Place::all()
+            ->contains(fn (Place $place) => $this->normalizePassword($place->password) === $password);
+
+        if ($passwordAlreadyUsed) {
             return back()->withErrors(['password' => 'Цей пароль вже використано']);
         }
 
@@ -49,6 +56,21 @@ class QuestController extends Controller
         ]);
 
         return redirect()->route('quest.result', ['position' => $position]);
+    }
+
+    private function normalizePassword(string $password): string
+    {
+        $password = Str::lower(trim($password));
+
+        return strtr($password, [
+            'а' => 'a',
+            'е' => 'e',
+            'о' => 'o',
+            'р' => 'p',
+            'с' => 'c',
+            'у' => 'y',
+            'х' => 'x',
+        ]);
     }
 
     public function result($position)
