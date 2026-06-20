@@ -17,8 +17,26 @@ class User extends Model
         'liceum_id',
         'team_id',
         'gender',
-        'pin_code'
+        'pin_code',
+        'image_path',
     ];
+
+    public function getImageUrlAttribute(): string
+    {
+        if ($this->image_path) {
+            return asset($this->image_path);
+        }
+
+        foreach (['png', 'jpg', 'jpeg', 'webp'] as $extension) {
+            $path = "images/users/{$this->id}.{$extension}";
+
+            if (file_exists(public_path($path))) {
+                return asset($path);
+            }
+        }
+
+        return asset('assets/images/user-profile.jpeg');
+    }
 
     public function session()
     {

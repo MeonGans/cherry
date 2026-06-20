@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
     public function index()
     {
         // Отримати користувачів, у яких сесія активна
-        $users = User::whereHas('session', function($query) {
+        $users = User::with(['team.element'])
+            ->whereHas('session', function($query) {
             $query->where('active', true);
         })->orderBy('team_id')->get();
 
@@ -20,7 +23,8 @@ class UserController extends Controller
     public function random()
     {
         // Отримати користувачів, у яких сесія активна
-        $users = User::whereHas('session', function($query) {
+        $users = User::with(['team.element'])
+            ->whereHas('session', function($query) {
             $query->where('active', true);
         })->inRandomOrder()->get();
 
@@ -61,7 +65,7 @@ class UserController extends Controller
 
     public function update(Request $request, User $user)
     {
-        $request->validate([
+        $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'session_id' => 'sometimes|required|exists:sessions,id',
             'phone_number' => 'sometimes|required|string|max:15',
@@ -69,16 +73,64 @@ class UserController extends Controller
             'liceum_id' => 'sometimes|required|exists:liceums,id',
             'team_id' => 'sometimes|exists:teams,id',
             'gender' => 'sometimes|required|in:male,female',
-            'pin_code' => 'nullable|string|max:255|unique:users,pin_code,' . $user->id
+            'pin_code' => 'nullable|string|max:255|unique:users,pin_code,' . $user->id,
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
         ]);
 
-        $user->update($request->all());
-        return redirect()->route('users.index')->with('success', 'User updated successfully.');
+        unset($validated['image']);
+
+        $user->update($validated);
+        $this->storeImage($request, $user);
+
+        return redirect()->route('list')->with('success', 'Учня оновлено.');
     }
 
     public function destroy(User $user)
     {
+        $this->deleteImage($user->image_path);
+
         $user->delete();
-        return redirect()->route('users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('list')->with('success', 'Учня видалено.');
+    }
+
+    private function storeImage(Request $request, User $user): void
+    {
+        if (!$request->hasFile('image')) {
+            return;
+        }
+
+        $directory = public_path('images/users');
+        File::ensureDirectoryExists($directory);
+
+        $oldPath = $user->image_path;
+        $file = $request->file('image');
+        $filename = $user->id . '-' . Str::random(12) . '.' . $file->extension();
+
+        $file->move($directory, $filename);
+
+        $user->update([
+            'image_path' => 'images/users/' . $filename,
+        ]);
+
+        $this->deleteImage($oldPath);
+    }
+
+    private function deleteImage(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $path = str_replace('\\', '/', $path);
+
+        if (!str_starts_with($path, 'images/users/')) {
+            return;
+        }
+
+        $fullPath = public_path($path);
+
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
     }
 }

@@ -29,6 +29,8 @@ Route::middleware(['admin.auth'])->group(function () {
 
     Route::get('/', [UserController::class, 'index'])->name('list');
     Route::get('/random_list', [UserController::class, 'random'])->name('random_list');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
 
 
     Route::get('/test', [TestController::class, 'showTestForm'])->name('test.show');
