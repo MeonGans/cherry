@@ -31,6 +31,13 @@
     </main>
 
     <style>
+        @media (min-width: 1024px) {
+            body:has(.quest-result) .main-container .main-content {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+
         .quest-result {
             --accent: #7d2039;
             --accent-2: #c3415f;

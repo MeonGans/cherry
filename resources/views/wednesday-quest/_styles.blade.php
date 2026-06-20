@@ -1,4 +1,11 @@
 <style>
+    @media (min-width: 1024px) {
+        body:has(.nevermore-quest) .main-container .main-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+    }
+
     .nevermore-quest {
         --quest-black: #050507;
         --quest-ink: #101019;

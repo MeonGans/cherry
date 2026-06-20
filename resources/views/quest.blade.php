@@ -62,6 +62,13 @@
     </main>
 
     <style>
+        @media (min-width: 1024px) {
+            body:has(.wednesday-quest) .main-container .main-content {
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+            }
+        }
+
         .wednesday-quest {
             --ink: #07070a;
             --night: #111018;
