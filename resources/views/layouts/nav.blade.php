@@ -83,6 +83,12 @@
                         <li>
                             <a href="{{ route('sorting2.show') }}" class="{{ Request::routeIs('sorting2.*') ? 'active' : '' }}">Сортування 2.0</a>
                         </li>
+                        <li>
+                            <a href="{{ route('wednesday-quest-routes.index') }}" class="{{ Request::routeIs('wednesday-quest-routes.*') ? 'active' : '' }}">Маршрути Вендздей</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('wednesday.quest.index') }}" class="{{ Request::routeIs('wednesday.quest.*') ? 'active' : '' }}" target="_blank">Вендздей-квест</a>
+                        </li>
                     </ul>
                 </li>
                 <li class="menu nav-item">

@@ -25,6 +25,8 @@ use App\Http\Controllers\FortuneController;
 use App\Http\Controllers\FortuneTwoController;
 use App\Http\Controllers\MusicClipCardController;
 use App\Http\Controllers\MusicClipController;
+use App\Http\Controllers\WednesdayQuestController;
+use App\Http\Controllers\WednesdayQuestRouteController;
 
 Route::middleware(['admin.auth'])->group(function () {
 
@@ -64,6 +66,13 @@ Route::middleware(['admin.auth'])->group(function () {
         ->parameters(['cards' => 'musicClipCard'])
         ->except(['show'])
         ->names('music-clip-cards');
+
+    Route::get('/wednesday/routes', [WednesdayQuestRouteController::class, 'index'])->name('wednesday-quest-routes.index');
+    Route::get('/wednesday/routes/create', [WednesdayQuestRouteController::class, 'create'])->name('wednesday-quest-routes.create');
+    Route::post('/wednesday/routes', [WednesdayQuestRouteController::class, 'store'])->name('wednesday-quest-routes.store');
+    Route::get('/wednesday/routes/{wednesdayQuestRoute}/edit', [WednesdayQuestRouteController::class, 'edit'])->name('wednesday-quest-routes.edit');
+    Route::put('/wednesday/routes/{wednesdayQuestRoute}', [WednesdayQuestRouteController::class, 'update'])->name('wednesday-quest-routes.update');
+    Route::delete('/wednesday/routes/{wednesdayQuestRoute}', [WednesdayQuestRouteController::class, 'destroy'])->name('wednesday-quest-routes.destroy');
 });
 
 Route::post('/votes', [VoteController::class, 'store'])->name('votes.store');
@@ -80,6 +89,10 @@ Route::get('/fortune-2', [FortuneTwoController::class, 'index'])->name('fortune.
 Route::post('/fortune-2/catch', [FortuneTwoController::class, 'catch'])->name('fortune.two.catch');
 Route::get('/music-clip', [MusicClipController::class, 'index'])->name('music.clip');
 Route::post('/music-clip/catch', [MusicClipController::class, 'catch'])->name('music.clip.catch');
+Route::get('/wednesday-quest', [WednesdayQuestController::class, 'index'])->name('wednesday.quest.index');
+Route::post('/wednesday-quest', [WednesdayQuestController::class, 'unlock'])->name('wednesday.quest.unlock');
+Route::get('/wednesday-quest/{wednesdayQuestRoute}', [WednesdayQuestController::class, 'route'])->name('wednesday.quest.route');
+Route::post('/wednesday-quest/{wednesdayQuestRoute}/hint', [WednesdayQuestController::class, 'hint'])->name('wednesday.quest.hint');
 
 
 use App\Http\Controllers\AdminAuthController;
