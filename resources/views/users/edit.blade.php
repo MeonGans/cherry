@@ -47,7 +47,19 @@
                 <input type="text" name="pin_code" id="pin_code" class="form-input" value="{{ old('pin_code', $user->pin_code) }}">
             </div>
 
-            <div class="md:col-span-2">
+            <div>
+                <label for="desired_team_id" class="mb-2 block font-semibold">Очікувана команда</label>
+                <select name="desired_team_id" id="desired_team_id" class="form-select">
+                    <option value="">Без команди</option>
+                    @foreach($teams as $team)
+                        <option value="{{ $team->id }}" {{ (string) old('desired_team_id', $user->desired_team_id) === (string) $team->id ? 'selected' : '' }}>
+                            #{{ $team->id }} - {{ $team->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <div>
                 <label for="image" class="mb-2 block font-semibold">Нове фото</label>
                 <input type="file" name="image" id="image" class="form-input" accept="image/*">
                 <p class="mt-2 text-xs text-white-dark">Підтримуються JPG, PNG або WEBP до 4 МБ.</p>

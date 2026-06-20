@@ -24,6 +24,50 @@
             <div class="mt-1 text-xl font-semibold">{{ $users->count() }}</div>
         </div>
 
+        @if(session('success'))
+            <div class="mb-5 rounded border border-success bg-success-light p-3 text-success">
+                {{ session('success') }}
+            </div>
+        @endif
+
+        @if($errors->any())
+            <div class="mb-5 rounded border border-danger bg-danger-light p-3 text-danger">
+                <ul class="list-disc pl-5">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form action="{{ route('sessions.users.store', $session) }}" method="POST" class="mb-5 rounded border border-white-light p-4 dark:border-[#1b2e4b]">
+            @csrf
+            <div class="mb-4">
+                <h6 class="text-base font-semibold text-black dark:text-white">Додати учня</h6>
+                <p class="text-sm text-white-dark">PIN-код сформується автоматично, фото можна додати пізніше через редагування.</p>
+            </div>
+            <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px_auto]">
+                <div>
+                    <label for="name" class="mb-2 block font-semibold">Ім'я</label>
+                    <input type="text" name="name" id="name" class="form-input" value="{{ old('name') }}" required>
+                </div>
+                <div>
+                    <label for="desired_team_id" class="mb-2 block font-semibold">Очікувана команда</label>
+                    <select name="desired_team_id" id="desired_team_id" class="form-select">
+                        <option value="">Без команди</option>
+                        @foreach($teams as $team)
+                            <option value="{{ $team->id }}" {{ (string) old('desired_team_id') === (string) $team->id ? 'selected' : '' }}>
+                                #{{ $team->id }} - {{ $team->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="btn btn-primary w-full">Додати</button>
+                </div>
+            </div>
+        </form>
+
         <div class="table-responsive">
             <table class="table-hover table">
                 <thead>
@@ -32,6 +76,7 @@
                     <th class="w-20">Фото</th>
                     <th>Ім'я</th>
                     <th>Команда</th>
+                    <th>Очікувана команда</th>
                     <th>PIN-код</th>
                     <th class="w-40 text-right">Дії</th>
                 </tr>
@@ -49,6 +94,7 @@
                         </td>
                         <td class="font-semibold">{{ $user->name }}</td>
                         <td>{{ $user->team->name ?? '' }}</td>
+                        <td>{{ $user->desiredTeam->name ?? '—' }}</td>
                         <td>{{ $user->pin_code ?? '—' }}</td>
                         <td>
                             <div class="flex justify-end">
@@ -60,7 +106,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-white-dark">У цій сесії ще немає учнів.</td>
+                        <td colspan="7" class="text-center text-white-dark">У цій сесії ще немає учнів.</td>
                     </tr>
                 @endforelse
                 </tbody>

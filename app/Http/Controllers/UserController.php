@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Team;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
@@ -60,7 +61,10 @@ class UserController extends Controller
 
     public function edit(User $user)
     {
-        return view('users.edit', compact('user'));
+        return view('users.edit', [
+            'user' => $user,
+            'teams' => Team::orderBy('id')->get(),
+        ]);
     }
 
     public function update(Request $request, User $user)
@@ -72,6 +76,7 @@ class UserController extends Controller
             'date_of_birth' => 'sometimes|required|date',
             'liceum_id' => 'sometimes|required|exists:liceums,id',
             'team_id' => 'sometimes|exists:teams,id',
+            'desired_team_id' => 'nullable|integer|exists:teams,id',
             'gender' => 'sometimes|required|in:male,female',
             'pin_code' => 'nullable|string|max:255|unique:users,pin_code,' . $user->id,
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',

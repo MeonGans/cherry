@@ -37,6 +37,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/sessions/create', [SessionController::class, 'create'])->name('sessions.create');
     Route::post('/sessions', [SessionController::class, 'store'])->name('sessions.store');
     Route::get('/sessions/{session}/users', [SessionController::class, 'users'])->name('sessions.users');
+    Route::post('/sessions/{session}/users', [SessionController::class, 'addUser'])->name('sessions.users.store');
     Route::patch('/sessions/{session}/activate', [SessionController::class, 'activate'])->name('sessions.activate');
     Route::patch('/sessions/{session}/deactivate', [SessionController::class, 'deactivate'])->name('sessions.deactivate');
 

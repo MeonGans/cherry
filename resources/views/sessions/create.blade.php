@@ -43,6 +43,35 @@
                 </p>
             </div>
 
+            <div class="md:col-span-2">
+                <label for="students" class="mb-2 block font-semibold">Загальний список учнів</label>
+                <textarea
+                    name="students"
+                    id="students"
+                    rows="10"
+                    class="form-textarea"
+                    placeholder="Іванов Іван - 5&#10;Петренко Марія - 2"
+                >{{ old('students') }}</textarea>
+                <p class="mt-2 text-xs text-white-dark">
+                    Формат: ім'я учня, дефіс, ID очікуваної команди. Для кожного учня автоматично створиться PIN-код.
+                </p>
+            </div>
+
+            <div class="md:col-span-2">
+                <div class="rounded border border-white-light p-4 dark:border-[#1b2e4b]">
+                    <div class="mb-3 text-sm font-semibold text-black dark:text-white">ID команд</div>
+                    <div class="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        @foreach($teams as $team)
+                            <div class="rounded bg-white-light/40 px-3 py-2 text-sm dark:bg-dark">
+                                <span class="font-semibold">#{{ $team->id }}</span>
+                                <span class="text-white-dark">-</span>
+                                <span>{{ $team->name }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             <div class="flex gap-2 md:col-span-2">
                 <button type="submit" class="btn btn-primary">Створити</button>
                 <a href="{{ route('sessions.index') }}" class="btn btn-outline-danger">Скасувати</a>

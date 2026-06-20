@@ -16,6 +16,7 @@ class User extends Model
         'date_of_birth',
         'liceum_id',
         'team_id',
+        'desired_team_id',
         'gender',
         'pin_code',
         'image_path',
@@ -51,5 +52,10 @@ class User extends Model
     public function team()
     {
         return $this->belongsTo(Team::class);
+    }
+
+    public function desiredTeam()
+    {
+        return $this->belongsTo(Team::class, 'desired_team_id');
     }
 }
