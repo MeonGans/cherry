@@ -34,7 +34,16 @@ class WednesdayQuestController extends Controller
 
     public function route(WednesdayQuestRoute $wednesdayQuestRoute)
     {
-        return $this->showRoute($wednesdayQuestRoute);
+        return $this->showRoute(
+            $wednesdayQuestRoute,
+            session($this->hintSessionKey($wednesdayQuestRoute)),
+            (bool) session($this->finalSessionKey($wednesdayQuestRoute), false)
+        );
+    }
+
+    public function redirectFromHint(WednesdayQuestRoute $wednesdayQuestRoute)
+    {
+        return redirect()->route('wednesday.quest.route', $wednesdayQuestRoute);
     }
 
     public function hint(Request $request, WednesdayQuestRoute $wednesdayQuestRoute)
@@ -48,7 +57,12 @@ class WednesdayQuestController extends Controller
         $stepCode = trim($request->input('step_code'));
 
         if ($stepCode === WednesdayQuestRoute::SAFE_CODE) {
-            return $this->showRoute($wednesdayQuestRoute, null, true);
+            session([
+                $this->hintSessionKey($wednesdayQuestRoute) => null,
+                $this->finalSessionKey($wednesdayQuestRoute) => true,
+            ]);
+
+            return redirect()->route('wednesday.quest.route', $wednesdayQuestRoute);
         }
 
         $hintNumber = array_flip(WednesdayQuestRoute::HINT_CODES)[$stepCode] ?? null;
@@ -59,7 +73,12 @@ class WednesdayQuestController extends Controller
                 ->withErrors(['step_code' => 'Невірний код підказки.']);
         }
 
-        return $this->showRoute($wednesdayQuestRoute, $hintNumber);
+        session([
+            $this->hintSessionKey($wednesdayQuestRoute) => $hintNumber,
+            $this->finalSessionKey($wednesdayQuestRoute) => false,
+        ]);
+
+        return redirect()->route('wednesday.quest.route', $wednesdayQuestRoute);
     }
 
     private function showRoute(
@@ -73,5 +92,15 @@ class WednesdayQuestController extends Controller
             'hintText' => $hintNumber ? $questRoute->hintFor($hintNumber) : null,
             'isFinal' => $isFinal,
         ]);
+    }
+
+    private function hintSessionKey(WednesdayQuestRoute $questRoute): string
+    {
+        return "wednesday_quest.{$questRoute->getKey()}.hint";
+    }
+
+    private function finalSessionKey(WednesdayQuestRoute $questRoute): string
+    {
+        return "wednesday_quest.{$questRoute->getKey()}.final";
     }
 }

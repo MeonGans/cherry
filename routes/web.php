@@ -92,6 +92,7 @@ Route::post('/music-clip/catch', [MusicClipController::class, 'catch'])->name('m
 Route::get('/wednesday-quest', [WednesdayQuestController::class, 'index'])->name('wednesday.quest.index');
 Route::post('/wednesday-quest', [WednesdayQuestController::class, 'unlock'])->name('wednesday.quest.unlock');
 Route::get('/wednesday-quest/{wednesdayQuestRoute}', [WednesdayQuestController::class, 'route'])->name('wednesday.quest.route');
+Route::get('/wednesday-quest/{wednesdayQuestRoute}/hint', [WednesdayQuestController::class, 'redirectFromHint']);
 Route::post('/wednesday-quest/{wednesdayQuestRoute}/hint', [WednesdayQuestController::class, 'hint'])->name('wednesday.quest.hint');
 
 
