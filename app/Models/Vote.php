@@ -68,6 +68,11 @@ class Vote extends Model
         return $this->hasMany(OscarVote::class);
     }
 
+    public function oscarNominees()
+    {
+        return $this->hasMany(OscarNominee::class);
+    }
+
     public function isPhotoVote(): bool
     {
         return $this->type === self::TYPE_PHOTO;

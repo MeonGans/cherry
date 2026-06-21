@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\OscarVote;
+use App\Models\OscarNominee;
 use App\Models\PhotoVote;
 use App\Models\Session as CampSession;
 use App\Models\Team;
@@ -14,6 +15,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
 
 class VoteController extends Controller
@@ -28,8 +30,11 @@ class VoteController extends Controller
     public function create()
     {
         $activeSession = CampSession::where('active', true)->first();
+        $oscarCandidatesByNomination = $activeSession
+            ? $this->oscarCandidatesByNominationForSession($activeSession->id)
+            : collect();
 
-        return view('votes.create', compact('activeSession'));
+        return view('votes.create', compact('activeSession', 'oscarCandidatesByNomination'));
     }
 
     public function store(Request $request)
@@ -58,6 +63,9 @@ class VoteController extends Controller
                     ->withInput()
                     ->withErrors(['type' => 'Спочатку активуйте сесію, щоб створити голосування “Оскар”.']);
             }
+
+            $request->validate($this->oscarNomineeRules(), $this->oscarNomineeMessages());
+            $this->validateOscarNomineesBelongToSession($request, $activeSession->id);
         }
 
         $voteUrl = Str::random(10);
@@ -70,6 +78,10 @@ class VoteController extends Controller
 
         if ($vote->isPhotoVote()) {
             $this->storeUploadedPhotos($vote, $request->file('photos', []));
+        }
+
+        if ($vote->isOscarVote()) {
+            $this->storeOscarNominees($vote, $request->input('oscar_nominees', []));
         }
 
         return redirect()->route('votes.show', $voteUrl);
@@ -462,7 +474,25 @@ class VoteController extends Controller
 
     private function oscarCandidatesByNomination(Vote $vote)
     {
-        $candidates = User::where('session_id', $vote->session_id)
+        $nominees = $vote->oscarNominees()
+            ->with('user')
+            ->get()
+            ->groupBy('nomination');
+
+        return collect(Vote::OSCAR_NOMINATIONS)->mapWithKeys(function (array $nomination, string $key) use ($nominees) {
+            $nominationNominees = ($nominees[$key] ?? collect())
+                ->pluck('user')
+                ->filter()
+                ->sortBy('name')
+                ->values();
+
+            return [$key => $nominationNominees];
+        });
+    }
+
+    private function oscarCandidatesByNominationForSession(int $sessionId)
+    {
+        $candidates = User::where('session_id', $sessionId)
             ->orderBy('name')
             ->get();
 
@@ -477,6 +507,60 @@ class VoteController extends Controller
 
             return [$key => $nominationCandidates];
         });
+    }
+
+    private function oscarNomineeRules(): array
+    {
+        $rules = [];
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $rules["oscar_nominees.{$key}"] = ['required', 'array', 'min:' . $nomination['limit']];
+            $rules["oscar_nominees.{$key}.*"] = ['integer', 'distinct', 'exists:users,id'];
+        }
+
+        return $rules;
+    }
+
+    private function oscarNomineeMessages(): array
+    {
+        $messages = [];
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $messages["oscar_nominees.{$key}.required"] = "Оберіть номінантів для “{$nomination['title']}”.";
+            $messages["oscar_nominees.{$key}.min"] = "Для “{$nomination['title']}” потрібно обрати щонайменше {$nomination['limit']} номінантів.";
+            $messages["oscar_nominees.{$key}.*.distinct"] = "У “{$nomination['title']}” номінанти не можуть повторюватися.";
+        }
+
+        return $messages;
+    }
+
+    private function validateOscarNomineesBelongToSession(Request $request, int $sessionId): void
+    {
+        $candidatesByNomination = $this->oscarCandidatesByNominationForSession($sessionId);
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $allowedIds = $candidatesByNomination[$key]->pluck('id');
+            $selectedIds = collect($request->input("oscar_nominees.{$key}", []));
+
+            if ($selectedIds->diff($allowedIds)->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    "oscar_nominees.{$key}" => "Номінанти для “{$nomination['title']}” мають бути з активної сесії та відповідної категорії.",
+                ]);
+            }
+        }
+    }
+
+    private function storeOscarNominees(Vote $vote, array $nomineesByNomination): void
+    {
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            foreach ($nomineesByNomination[$key] ?? [] as $userId) {
+                OscarNominee::create([
+                    'vote_id' => $vote->id,
+                    'nomination' => $key,
+                    'user_id' => $userId,
+                ]);
+            }
+        }
     }
 
     private function storeUploadedPhotos(Vote $vote, array $files): void

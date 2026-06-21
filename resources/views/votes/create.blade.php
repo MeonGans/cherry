@@ -50,6 +50,46 @@
                         Кандидати підтягнуться з активної сесії #{{ $activeSession->id }}
                         ({{ $activeSession->start_date }} - {{ $activeSession->end_date }}).
                     </p>
+
+                    <div class="mt-5 space-y-4">
+                        @foreach(\App\Models\Vote::OSCAR_NOMINATIONS as $key => $nomination)
+                            @php
+                                $candidates = $oscarCandidatesByNomination[$key] ?? collect();
+                                $selected = old("oscar_nominees.{$key}", []);
+                            @endphp
+
+                            <div class="rounded border border-white-light p-3 dark:border-[#191e3a]">
+                                <label for="oscar_nominees_{{ $key }}" class="mb-2 block font-semibold">
+                                    {{ $nomination['title'] }}
+                                    <span class="text-xs font-normal text-white-dark">
+                                        мінімум {{ $nomination['limit'] }}
+                                    </span>
+                                </label>
+
+                                <select
+                                    id="oscar_nominees_{{ $key }}"
+                                    name="oscar_nominees[{{ $key }}][]"
+                                    class="form-select oscar-multiselect"
+                                    multiple
+                                    size="6"
+                                >
+                                    @foreach($candidates as $candidate)
+                                        <option value="{{ $candidate->id }}" @selected(in_array($candidate->id, $selected))>
+                                            {{ $candidate->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
+                                @if($candidates->isEmpty())
+                                    <p class="mt-2 text-sm font-semibold text-danger">Немає кандидатів для цієї номінації.</p>
+                                @else
+                                    <p class="mt-2 text-xs text-white-dark">
+                                        Обрано: <span class="oscar-selected-count">0</span> / {{ $candidates->count() }}
+                                    </p>
+                                @endif
+                            </div>
+                        @endforeach
+                    </div>
                 @else
                     <p class="mt-2 text-sm font-semibold text-danger">
                         Активної сесії немає. Щоб створити “Оскар”, спочатку активуйте потрібний заїзд.
@@ -68,6 +108,7 @@
             const oscarBlock = document.getElementById('oscarInfoBlock');
             const photoInput = document.getElementById('photos');
             const photoCounter = document.getElementById('photoCounter');
+            const oscarMultiselects = Array.from(document.querySelectorAll('.oscar-multiselect'));
             const photoType = @json(\App\Models\Vote::TYPE_PHOTO);
             const oscarType = @json(\App\Models\Vote::TYPE_OSCAR);
 
@@ -80,10 +121,22 @@
                 photoCounter.textContent = `Обрано: ${photoInput.files.length} / 10`;
             };
 
+            const syncOscarCounters = () => {
+                oscarMultiselects.forEach((select) => {
+                    const counter = select.closest('div').querySelector('.oscar-selected-count');
+
+                    if (counter) {
+                        counter.textContent = Array.from(select.selectedOptions).length;
+                    }
+                });
+            };
+
             typeSelect.addEventListener('change', syncBlocks);
             photoInput.addEventListener('change', syncCounter);
+            oscarMultiselects.forEach((select) => select.addEventListener('change', syncOscarCounters));
             syncBlocks();
             syncCounter();
+            syncOscarCounters();
         });
     </script>
 @endsection
