@@ -2,13 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\OscarVote;
 use App\Models\PhotoVote;
+use App\Models\Session as CampSession;
 use App\Models\Team;
 use App\Models\User;
 use App\Models\UserVote;
 use App\Models\Vote;
 use App\Models\VotePhoto;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
@@ -17,21 +20,23 @@ class VoteController extends Controller
 {
     public function index()
     {
-        $votes = Vote::withCount('photos')->latest()->get();
+        $votes = Vote::with('session')->withCount('photos')->latest()->get();
 
         return view('votes.index', compact('votes'));
     }
 
     public function create()
     {
-        return view('votes.create');
+        $activeSession = CampSession::where('active', true)->first();
+
+        return view('votes.create', compact('activeSession'));
     }
 
     public function store(Request $request)
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'type' => ['required', Rule::in([Vote::TYPE_TEAM, Vote::TYPE_PHOTO])],
+            'type' => ['required', Rule::in([Vote::TYPE_TEAM, Vote::TYPE_PHOTO, Vote::TYPE_OSCAR])],
         ]);
 
         if ($data['type'] === Vote::TYPE_PHOTO) {
@@ -43,11 +48,24 @@ class VoteController extends Controller
             ]);
         }
 
+        $activeSession = null;
+
+        if ($data['type'] === Vote::TYPE_OSCAR) {
+            $activeSession = CampSession::where('active', true)->first();
+
+            if (!$activeSession) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['type' => 'Спочатку активуйте сесію, щоб створити голосування “Оскар”.']);
+            }
+        }
+
         $voteUrl = Str::random(10);
         $vote = Vote::create([
             'name' => $data['name'],
             'vote_url' => $voteUrl,
             'type' => $data['type'],
+            'session_id' => $activeSession?->id,
         ]);
 
         if ($vote->isPhotoVote()) {
@@ -94,6 +112,16 @@ class VoteController extends Controller
             return view('votes.photo-vote', compact('vote', 'user', 'photos', 'alreadyVoted'));
         }
 
+        if ($vote->isOscarVote()) {
+            $nominations = Vote::OSCAR_NOMINATIONS;
+            $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+            $alreadyVoted = OscarVote::where('vote_id', $vote->id)
+                ->where('user_id', $user->id)
+                ->exists();
+
+            return view('votes.oscar-vote', compact('vote', 'user', 'nominations', 'candidatesByNomination', 'alreadyVoted'));
+        }
+
         $teams = Team::where('id', '!=', $user->team_id)
             ->where('id', '!=', 10)
             ->get();
@@ -108,6 +136,10 @@ class VoteController extends Controller
 
         if ($vote->isPhotoVote()) {
             return $this->submitPhotoVote($request, $vote, $user);
+        }
+
+        if ($vote->isOscarVote()) {
+            return $this->submitOscarVote($request, $vote, $user);
         }
 
         $data = $request->validate([
@@ -153,6 +185,10 @@ class VoteController extends Controller
             return $this->photoResult($vote);
         }
 
+        if ($vote->isOscarVote()) {
+            return $this->oscarResult($vote);
+        }
+
         $results = UserVote::where('vote_id', $vote->id)
             ->with('team.element')
             ->get()
@@ -180,6 +216,8 @@ class VoteController extends Controller
             return view('votes.add-photo-points', compact('vote', 'photos'));
         }
 
+        abort_if($vote->isOscarVote(), 404);
+
         $teams = Team::with('element')->get();
 
         return view('votes.add-points', compact('vote', 'teams'));
@@ -192,6 +230,8 @@ class VoteController extends Controller
         if ($vote->isPhotoVote()) {
             return $this->addPhotoPoints($request, $vote);
         }
+
+        abort_if($vote->isOscarVote(), 404);
 
         $data = $request->validate([
             'team_id' => ['required', 'exists:teams,id'],
@@ -326,6 +366,117 @@ class VoteController extends Controller
         ])->values();
 
         return view('votes.photo-result', compact('vote', 'photos', 'maxVotes'));
+    }
+
+    private function submitOscarVote(Request $request, Vote $vote, User $user)
+    {
+        $alreadyVoted = OscarVote::where('vote_id', $vote->id)
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if ($alreadyVoted) {
+            return redirect()
+                ->route('votes.vote', ['voteUrl' => $vote->vote_url, 'userId' => $user->id])
+                ->withErrors(['message' => 'Ви вже проголосували.']);
+        }
+
+        $rules = [];
+        $messages = [];
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $limit = $nomination['limit'];
+            $rules["oscar_votes.{$key}"] = ['required', 'array', 'size:' . $limit];
+            $rules["oscar_votes.{$key}.*"] = ['integer', 'distinct', 'exists:users,id'];
+            $messages["oscar_votes.{$key}.required"] = "Оберіть номінантів для категорії “{$nomination['title']}”.";
+            $messages["oscar_votes.{$key}.size"] = $limit === 1
+                ? "У категорії “{$nomination['title']}” потрібно обрати одного номінанта."
+                : "У категорії “{$nomination['title']}” потрібно обрати {$limit} номінантів.";
+            $messages["oscar_votes.{$key}.*.distinct"] = "У категорії “{$nomination['title']}” номінанти не можуть повторюватися.";
+        }
+
+        $data = $request->validate($rules, $messages);
+        $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $allowedIds = $candidatesByNomination[$key]->pluck('id');
+            $selectedIds = collect($data['oscar_votes'][$key]);
+
+            if ($selectedIds->diff($allowedIds)->isNotEmpty()) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['oscar_votes' => "Оберіть номінантів для “{$nomination['title']}” тільки з цього заїзду."]);
+            }
+        }
+
+        DB::transaction(function () use ($data, $vote, $user) {
+            foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+                foreach ($data['oscar_votes'][$key] as $nomineeId) {
+                    OscarVote::create([
+                        'vote_id' => $vote->id,
+                        'nomination' => $key,
+                        'user_id' => $user->id,
+                        'nominee_user_id' => $nomineeId,
+                        'points' => 1,
+                    ]);
+                }
+            }
+        });
+
+        return redirect()->route('votes.success');
+    }
+
+    private function oscarResult(Vote $vote)
+    {
+        $scores = OscarVote::where('vote_id', $vote->id)
+            ->selectRaw('nomination, nominee_user_id, SUM(points) as total')
+            ->groupBy('nomination', 'nominee_user_id')
+            ->get()
+            ->groupBy('nomination');
+
+        $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+        $results = collect();
+
+        foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $scoreMap = ($scores[$key] ?? collect())->pluck('total', 'nominee_user_id');
+            $nominees = $candidatesByNomination[$key]
+                ->filter(fn (User $candidate) => (int) ($scoreMap[$candidate->id] ?? 0) > 0)
+                ->map(function (User $candidate) use ($scoreMap) {
+                    $candidate->oscar_score = (int) ($scoreMap[$candidate->id] ?? 0);
+
+                    return $candidate;
+                })
+                ->sortBy('name')
+                ->sortBy('oscar_score')
+                ->values();
+
+            $results[$key] = [
+                'title' => $nomination['title'],
+                'limit' => $nomination['limit'],
+                'nominees' => $nominees,
+                'maxScore' => $nominees->max('oscar_score') ?? 0,
+            ];
+        }
+
+        return view('votes.oscar-result', compact('vote', 'results'));
+    }
+
+    private function oscarCandidatesByNomination(Vote $vote)
+    {
+        $candidates = User::where('session_id', $vote->session_id)
+            ->orderBy('name')
+            ->get();
+
+        return collect(Vote::OSCAR_NOMINATIONS)->mapWithKeys(function (array $nomination, string $key) use ($candidates) {
+            $nominationCandidates = $candidates;
+
+            if ($nomination['gender']) {
+                $nominationCandidates = $nominationCandidates
+                    ->where('gender', $nomination['gender'])
+                    ->values();
+            }
+
+            return [$key => $nominationCandidates];
+        });
     }
 
     private function storeUploadedPhotos(Vote $vote, array $files): void

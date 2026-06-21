@@ -15,7 +15,7 @@
                     <th>Назва</th>
                     <th>Тип</th>
                     <th>URL</th>
-                    <th>Фото</th>
+                    <th>Дані</th>
                     <th>Результат</th>
                     <th>Бали</th>
                     <th>Керування</th>
@@ -27,21 +27,37 @@
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $vote->name }}</td>
                         <td>
-                            <span class="badge {{ $vote->isPhotoVote() ? 'bg-info' : 'bg-primary' }}">
-                                {{ $vote->isPhotoVote() ? 'Фото' : 'Команди' }}
-                            </span>
+                            @if($vote->isPhotoVote())
+                                <span class="badge bg-info">Фото</span>
+                            @elseif($vote->isOscarVote())
+                                <span class="badge bg-warning">Оскар</span>
+                            @else
+                                <span class="badge bg-primary">Команди</span>
+                            @endif
                         </td>
                         <td>
                             <a href="{{ route('votes.show', $vote->vote_url) }}">
                                 {{ url('/votes/' . $vote->vote_url) }}
                             </a>
                         </td>
-                        <td>{{ $vote->isPhotoVote() ? $vote->photos_count . ' / 10' : '-' }}</td>
+                        <td>
+                            @if($vote->isPhotoVote())
+                                {{ $vote->photos_count }} / 10 фото
+                            @elseif($vote->isOscarVote())
+                                Сесія #{{ $vote->session_id ?? '-' }}
+                            @else
+                                -
+                            @endif
+                        </td>
                         <td>
                             <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-outline-primary btn-sm">Результат</a>
                         </td>
                         <td>
-                            <a href="{{ route('votes.addPointsForm', $vote->vote_url) }}" class="btn btn-outline-warning btn-sm">Додати бали</a>
+                            @if($vote->isOscarVote())
+                                -
+                            @else
+                                <a href="{{ route('votes.addPointsForm', $vote->vote_url) }}" class="btn btn-outline-warning btn-sm">Додати бали</a>
+                            @endif
                         </td>
                         <td>
                             @if($vote->isPhotoVote())

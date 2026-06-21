@@ -25,6 +25,7 @@
                 <select id="type" name="type" class="form-select">
                     <option value="{{ \App\Models\Vote::TYPE_TEAM }}" @selected(old('type') === \App\Models\Vote::TYPE_TEAM)>Командне голосування</option>
                     <option value="{{ \App\Models\Vote::TYPE_PHOTO }}" @selected(old('type') === \App\Models\Vote::TYPE_PHOTO)>Краще фото заїзду</option>
+                    <option value="{{ \App\Models\Vote::TYPE_OSCAR }}" @selected(old('type') === \App\Models\Vote::TYPE_OSCAR)>Оскар</option>
                 </select>
             </div>
 
@@ -42,6 +43,20 @@
                 <p id="photoCounter" class="mt-2 text-sm font-semibold">Обрано: 0 / 10</p>
             </div>
 
+            <div id="oscarInfoBlock" class="mb-4 hidden rounded border border-warning p-4 dark:border-warning">
+                <p class="font-semibold">Номінації: режисер, чоловіча роль, жіноча роль, монтаж, оператор.</p>
+                @if($activeSession)
+                    <p class="mt-2 text-sm text-white-dark">
+                        Кандидати підтягнуться з активної сесії #{{ $activeSession->id }}
+                        ({{ $activeSession->start_date }} - {{ $activeSession->end_date }}).
+                    </p>
+                @else
+                    <p class="mt-2 text-sm font-semibold text-danger">
+                        Активної сесії немає. Щоб створити “Оскар”, спочатку активуйте потрібний заїзд.
+                    </p>
+                @endif
+            </div>
+
             <button type="submit" class="btn btn-primary mt-6">Створити</button>
         </form>
     </div>
@@ -50,21 +65,24 @@
         document.addEventListener('DOMContentLoaded', () => {
             const typeSelect = document.getElementById('type');
             const photoBlock = document.getElementById('photoUploadBlock');
+            const oscarBlock = document.getElementById('oscarInfoBlock');
             const photoInput = document.getElementById('photos');
             const photoCounter = document.getElementById('photoCounter');
             const photoType = @json(\App\Models\Vote::TYPE_PHOTO);
+            const oscarType = @json(\App\Models\Vote::TYPE_OSCAR);
 
-            const syncPhotoBlock = () => {
+            const syncBlocks = () => {
                 photoBlock.classList.toggle('hidden', typeSelect.value !== photoType);
+                oscarBlock.classList.toggle('hidden', typeSelect.value !== oscarType);
             };
 
             const syncCounter = () => {
                 photoCounter.textContent = `Обрано: ${photoInput.files.length} / 10`;
             };
 
-            typeSelect.addEventListener('change', syncPhotoBlock);
+            typeSelect.addEventListener('change', syncBlocks);
             photoInput.addEventListener('change', syncCounter);
-            syncPhotoBlock();
+            syncBlocks();
             syncCounter();
         });
     </script>
