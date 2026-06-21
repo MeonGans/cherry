@@ -9,10 +9,28 @@ class Vote extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'vote_url'];
+    public const TYPE_TEAM = 'team';
+    public const TYPE_PHOTO = 'photo';
+
+    protected $fillable = ['name', 'vote_url', 'type'];
 
     public function votes()
     {
         return $this->hasMany(UserVote::class);
+    }
+
+    public function photos()
+    {
+        return $this->hasMany(VotePhoto::class)->orderBy('sort_order');
+    }
+
+    public function photoVotes()
+    {
+        return $this->hasMany(PhotoVote::class);
+    }
+
+    public function isPhotoVote(): bool
+    {
+        return $this->type === self::TYPE_PHOTO;
     }
 }

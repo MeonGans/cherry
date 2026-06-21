@@ -58,6 +58,8 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/votes/{voteUrl}/result', [VoteController::class, 'result'])->name('votes.result');
     Route::get('/votes/{voteUrl}/add-points', [VoteController::class, 'addPointsForm'])->name('votes.addPointsForm');
     Route::post('/votes/{voteUrl}/add-points', [VoteController::class, 'addPoints'])->name('votes.addPoints');
+    Route::get('/votes/{voteUrl}/photos', [VoteController::class, 'photosForm'])->name('votes.photosForm');
+    Route::post('/votes/{voteUrl}/photos', [VoteController::class, 'storePhotos'])->name('votes.photos.store');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::resource('products', ProductController::class);
 
