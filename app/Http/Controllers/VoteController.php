@@ -228,7 +228,12 @@ class VoteController extends Controller
             return view('votes.add-photo-points', compact('vote', 'photos'));
         }
 
-        abort_if($vote->isOscarVote(), 404);
+        if ($vote->isOscarVote()) {
+            $nominations = Vote::OSCAR_NOMINATIONS;
+            $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+
+            return view('votes.add-oscar-points', compact('vote', 'nominations', 'candidatesByNomination'));
+        }
 
         $teams = Team::with('element')->get();
 
@@ -243,7 +248,9 @@ class VoteController extends Controller
             return $this->addPhotoPoints($request, $vote);
         }
 
-        abort_if($vote->isOscarVote(), 404);
+        if ($vote->isOscarVote()) {
+            return $this->addOscarPoints($request, $vote);
+        }
 
         $data = $request->validate([
             'team_id' => ['required', 'exists:teams,id'],
@@ -352,6 +359,34 @@ class VoteController extends Controller
             'vote_photo_id' => $photo->id,
             'user_id' => auth()->id() ?? null,
             'source' => PhotoVote::SOURCE_JURY,
+            'points' => $data['points'],
+        ]);
+
+        return redirect()->route('votes.result', $vote->vote_url);
+    }
+
+    private function addOscarPoints(Request $request, Vote $vote)
+    {
+        $data = $request->validate([
+            'nomination' => ['required', Rule::in(array_keys(Vote::OSCAR_NOMINATIONS))],
+            'nominee_user_id' => ['required', 'exists:users,id'],
+            'points' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+        $allowedIds = $candidatesByNomination[$data['nomination']]->pluck('id');
+
+        if (!$allowedIds->contains((int) $data['nominee_user_id'])) {
+            return back()
+                ->withInput()
+                ->withErrors(['nominee_user_id' => 'Оберіть номінанта з цієї номінації.']);
+        }
+
+        OscarVote::create([
+            'vote_id' => $vote->id,
+            'nomination' => $data['nomination'],
+            'user_id' => null,
+            'nominee_user_id' => $data['nominee_user_id'],
             'points' => $data['points'],
         ]);
 

@@ -66,8 +66,7 @@
         .photo-result-card img {
             display: block;
             width: 100%;
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
+            height: auto;
         }
 
         .photo-result-body {

@@ -78,9 +78,9 @@
         }
 
         .photo-frame img {
+            display: block;
             width: 100%;
-            aspect-ratio: 4 / 3;
-            object-fit: cover;
+            height: auto;
             background: #f1f2f3;
         }
 

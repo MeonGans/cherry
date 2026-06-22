@@ -53,11 +53,7 @@
                             <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-outline-primary btn-sm">Результат</a>
                         </td>
                         <td>
-                            @if($vote->isOscarVote())
-                                -
-                            @else
-                                <a href="{{ route('votes.addPointsForm', $vote->vote_url) }}" class="btn btn-outline-warning btn-sm">Додати бали</a>
-                            @endif
+                            <a href="{{ route('votes.addPointsForm', $vote->vote_url) }}" class="btn btn-outline-warning btn-sm">Додати бали</a>
                         </td>
                         <td>
                             @if($vote->isPhotoVote())
