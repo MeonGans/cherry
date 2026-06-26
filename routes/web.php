@@ -27,6 +27,9 @@ use App\Http\Controllers\MusicClipCardController;
 use App\Http\Controllers\MusicClipController;
 use App\Http\Controllers\WednesdayQuestController;
 use App\Http\Controllers\WednesdayQuestRouteController;
+use App\Http\Controllers\ZootopiaQuestController;
+use App\Http\Controllers\ZootopiaQuestRouteController;
+use App\Http\Controllers\ZootopiaSafeController;
 
 Route::middleware(['admin.auth'])->group(function () {
 
@@ -75,6 +78,13 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/wednesday/routes/{wednesdayQuestRoute}/edit', [WednesdayQuestRouteController::class, 'edit'])->name('wednesday-quest-routes.edit');
     Route::put('/wednesday/routes/{wednesdayQuestRoute}', [WednesdayQuestRouteController::class, 'update'])->name('wednesday-quest-routes.update');
     Route::delete('/wednesday/routes/{wednesdayQuestRoute}', [WednesdayQuestRouteController::class, 'destroy'])->name('wednesday-quest-routes.destroy');
+
+    Route::get('/zootopia/routes', [ZootopiaQuestRouteController::class, 'index'])->name('zootopia-quest-routes.index');
+    Route::get('/zootopia/routes/create', [ZootopiaQuestRouteController::class, 'create'])->name('zootopia-quest-routes.create');
+    Route::post('/zootopia/routes', [ZootopiaQuestRouteController::class, 'store'])->name('zootopia-quest-routes.store');
+    Route::get('/zootopia/routes/{zootopiaQuestRoute}/edit', [ZootopiaQuestRouteController::class, 'edit'])->name('zootopia-quest-routes.edit');
+    Route::put('/zootopia/routes/{zootopiaQuestRoute}', [ZootopiaQuestRouteController::class, 'update'])->name('zootopia-quest-routes.update');
+    Route::delete('/zootopia/routes/{zootopiaQuestRoute}', [ZootopiaQuestRouteController::class, 'destroy'])->name('zootopia-quest-routes.destroy');
 });
 
 Route::post('/votes', [VoteController::class, 'store'])->name('votes.store');
@@ -91,6 +101,11 @@ Route::get('/fortune-2', [FortuneTwoController::class, 'index'])->name('fortune.
 Route::post('/fortune-2/catch', [FortuneTwoController::class, 'catch'])->name('fortune.two.catch');
 Route::get('/music-clip', [MusicClipController::class, 'index'])->name('music.clip');
 Route::post('/music-clip/catch', [MusicClipController::class, 'catch'])->name('music.clip.catch');
+Route::get('/zootopia-quest', [ZootopiaQuestController::class, 'index'])->name('zootopia.quest.index');
+Route::post('/zootopia-quest', [ZootopiaQuestController::class, 'unlock'])->name('zootopia.quest.unlock');
+Route::get('/zootopia-quest/{zootopiaQuestRoute}', [ZootopiaQuestController::class, 'route'])->name('zootopia.quest.route');
+Route::get('/zootopia-quest/{zootopiaQuestRoute}/hint', [ZootopiaQuestController::class, 'redirectFromHint']);
+Route::post('/zootopia-quest/{zootopiaQuestRoute}/hint', [ZootopiaQuestController::class, 'hint'])->name('zootopia.quest.hint');
 Route::get('/wednesday-quest', [WednesdayQuestController::class, 'index'])->name('wednesday.quest.index');
 Route::post('/wednesday-quest', [WednesdayQuestController::class, 'unlock'])->name('wednesday.quest.unlock');
 Route::get('/wednesday-quest/{wednesdayQuestRoute}', [WednesdayQuestController::class, 'route'])->name('wednesday.quest.route');
@@ -110,3 +125,6 @@ use App\Http\Controllers\QuestController;
 Route::get('/quest', [QuestController::class, 'show'])->name('quest.show');
 Route::post('/quest', [QuestController::class, 'handle'])->name('quest.handle');
 Route::get('/quest/result/{position}', [QuestController::class, 'result'])->name('quest.result');
+Route::get('/zootopia-safe', [ZootopiaSafeController::class, 'show'])->name('zootopia.safe.show');
+Route::post('/zootopia-safe', [ZootopiaSafeController::class, 'handle'])->name('zootopia.safe.handle');
+Route::get('/zootopia-safe/result/{position}', [ZootopiaSafeController::class, 'result'])->name('zootopia.safe.result');

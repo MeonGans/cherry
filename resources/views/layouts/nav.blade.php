@@ -89,6 +89,12 @@
                         <li>
                             <a href="{{ route('wednesday.quest.index') }}" class="{{ Request::routeIs('wednesday.quest.*') ? 'active' : '' }}" target="_blank">Вендздей-квест</a>
                         </li>
+                        <li>
+                            <a href="{{ route('zootopia-quest-routes.index') }}" class="{{ Request::routeIs('zootopia-quest-routes.*') ? 'active' : '' }}">Маршрути Зоотрополіс</a>
+                        </li>
+                        <li>
+                            <a href="{{ route('zootopia.quest.index') }}" class="{{ Request::routeIs('zootopia.quest.*') ? 'active' : '' }}" target="_blank">Зоотрополіс-квест</a>
+                        </li>
                     </ul>
                 </li>
                 <li class="menu nav-item">
