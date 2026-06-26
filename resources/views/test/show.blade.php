@@ -7,6 +7,7 @@
             'air' => ['name' => 'Повітря', 'color' => '#38bdf8'],
             'water' => ['name' => 'Вода', 'color' => '#0ea5e9'],
             'earth' => ['name' => 'Земля', 'color' => '#22c55e'],
+            'metal' => ['name' => 'Метал', 'color' => '#94a3b8'],
         ];
     @endphp
 
@@ -61,9 +62,10 @@
         .element-sort-title {
             margin: 0;
             color: #0f172a;
-            font-size: clamp(2rem, 4vw, 3.3rem);
+            font-size: clamp(2rem, 6vw, 3rem);
             font-weight: 900;
-            line-height: 0.98;
+            line-height: 1.04;
+            overflow-wrap: anywhere;
         }
 
         .element-sort-subtitle {
@@ -100,6 +102,10 @@
             height: 48px;
             object-fit: contain;
             margin-bottom: 6px;
+        }
+
+        .element-sort-rune:last-child:nth-child(odd) {
+            grid-column: 1 / -1;
         }
 
         .element-sort-field {
@@ -204,7 +210,7 @@
 
         .element-answer-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: clamp(12px, 1.6vw, 18px);
             margin-top: 28px;
         }
@@ -432,9 +438,13 @@
                 padding: 14px;
             }
 
-            .element-answer-grid,
             .element-sort-runes {
                 grid-template-columns: 1fr;
+            }
+
+            .element-answer-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 8px;
             }
 
             .element-sort-actions {
@@ -451,7 +461,7 @@
         <div class="element-sort-shell">
             <aside class="element-sort-side">
                 <h1 class="element-sort-title">Сортування стихій</h1>
-                <p class="element-sort-subtitle">Кожен вибір додає іскру, подих, хвилю або корінь до майбутньої команди.</p>
+                <p class="element-sort-subtitle">Кожен вибір додає іскру, подих, хвилю, корінь або блиск до майбутньої команди.</p>
 
                 <div class="element-sort-runes" aria-hidden="true">
                     @foreach($elementStyles as $index => $element)
@@ -507,7 +517,7 @@
                                 <div class="element-answer-grid">
                                     @foreach ($answers as $answerIndex => $answer)
                                         @php
-                                            $answerColors = ['#f97316', '#38bdf8', '#0ea5e9', '#22c55e'];
+                                            $answerColors = ['#f97316', '#38bdf8', '#0ea5e9', '#22c55e', '#94a3b8'];
                                             $imageId = $answer->img ?: ((($answer->id - 1) % 30) + 1);
                                         @endphp
 
