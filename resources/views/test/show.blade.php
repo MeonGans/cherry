@@ -224,12 +224,12 @@
 
         .element-answer-card {
             position: relative;
-            min-height: 230px;
             overflow: hidden;
             border: 2px solid transparent;
             border-radius: 8px;
             background: #0f172a;
             box-shadow: 0 16px 36px rgba(15, 23, 42, 0.14);
+            aspect-ratio: 1 / 1;
             transition: transform 170ms ease, border-color 170ms ease, box-shadow 170ms ease;
         }
 
@@ -246,46 +246,11 @@
         .element-answer-card img {
             width: 100%;
             height: 100%;
-            min-height: 230px;
-            aspect-ratio: 16 / 10;
+            aspect-ratio: 1 / 1;
             object-fit: cover;
             filter: saturate(1.08) contrast(1.04);
             transform: scale(1.01);
             transition: transform 180ms ease, filter 180ms ease;
-        }
-
-        .element-answer-copy {
-            position: absolute;
-            left: 16px;
-            right: 16px;
-            bottom: 14px;
-            z-index: 2;
-            display: grid;
-            grid-template-columns: 42px 1fr;
-            gap: 12px;
-            align-items: center;
-            color: #ffffff;
-            text-align: left;
-        }
-
-        .element-answer-mark {
-            display: grid;
-            place-items: center;
-            width: 42px;
-            height: 42px;
-            border-radius: 8px;
-            background: color-mix(in srgb, var(--answer-color) 86%, #ffffff);
-            color: #0f172a;
-            font-weight: 1000;
-        }
-
-        .element-answer-text {
-            min-width: 0;
-            font-size: clamp(1rem, 1.8vw, 1.22rem);
-            font-weight: 900;
-            line-height: 1.2;
-            overflow-wrap: anywhere;
-            text-shadow: 0 2px 14px rgba(0, 0, 0, 0.34);
         }
 
         .element-answer:hover .element-answer-card {
@@ -472,11 +437,6 @@
                 grid-template-columns: 1fr;
             }
 
-            .element-answer-card,
-            .element-answer-card img {
-                min-height: 190px;
-            }
-
             .element-sort-actions {
                 flex-direction: column-reverse;
             }
@@ -551,7 +511,7 @@
                                             $imageId = $answer->img ?: ((($answer->id - 1) % 30) + 1);
                                         @endphp
 
-                                        <label class="element-answer" style="--answer-color: {{ $answerColors[$answerIndex % count($answerColors)] }}">
+                                        <label class="element-answer" style="--answer-color: {{ $answerColors[$answerIndex % count($answerColors)] }}" aria-label="{{ $answer->answer }}">
                                             <input
                                                 type="radio"
                                                 name="answers[{{ $question->id }}]"
@@ -561,10 +521,6 @@
                                             <span class="element-answer-card">
                                                 <img src="{{ asset('assets/images/answer/' . $imageId . '.png') }}" alt="{{ $answer->answer }}">
                                                 <span class="element-answer-check">✓</span>
-                                                <span class="element-answer-copy">
-                                                    <span class="element-answer-mark">{{ chr(65 + $answerIndex) }}</span>
-                                                    <span class="element-answer-text">{{ $answer->answer }}</span>
-                                                </span>
                                             </span>
                                         </label>
                                     @endforeach
