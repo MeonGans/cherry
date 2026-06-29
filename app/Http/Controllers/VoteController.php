@@ -209,11 +209,29 @@ class VoteController extends Controller
                 return $votes->sum('points');
             });
 
-        $maxVotes = $results->max();
+        $maxVotes = (int) ($results->max() ?? 0);
 
-        $teams = Team::whereIn('id', $results->keys())->with('element')->get()->mapWithKeys(function ($team) use ($results) {
-            return [$team->name => ['count' => $results[$team->id], 'color' => $team->element->color]];
-        });
+        $teams = Team::whereIn('id', $results->keys())
+            ->with('element')
+            ->get()
+            ->map(function (Team $team) use ($results, $maxVotes) {
+                $count = (int) ($results[$team->id] ?? 0);
+
+                return [
+                    'id' => $team->id,
+                    'name' => $team->name,
+                    'count' => $count,
+                    'color' => $team->element?->color ?? '#4361ee',
+                    'element_name' => $team->element?->name ?? $team->name,
+                    'logo' => $this->elementLogoPath($team),
+                    'is_winner' => $maxVotes > 0 && $count === $maxVotes,
+                ];
+            })
+            ->sortBy([
+                ['count', 'asc'],
+                ['name', 'asc'],
+            ])
+            ->values();
 
         return view('votes.result', compact('vote', 'teams', 'maxVotes'));
     }
@@ -391,6 +409,26 @@ class VoteController extends Controller
         ]);
 
         return redirect()->route('votes.result', $vote->vote_url);
+    }
+
+    private function elementLogoPath(Team $team): string
+    {
+        $name = mb_strtolower(trim(($team->element?->name ?? '') . ' ' . $team->name));
+
+        $logos = [
+            'вогонь' => 'assets/images/elements/1.png',
+            'вода' => 'assets/images/elements/2.png',
+            'повітря' => 'assets/images/elements/3.png',
+            'земля' => 'assets/images/elements/4.png',
+        ];
+
+        foreach ($logos as $needle => $path) {
+            if (str_contains($name, $needle)) {
+                return $path;
+            }
+        }
+
+        return 'assets/images/elements/' . ($team->element_id ?: 1) . '.png';
     }
 
     private function photoResult(Vote $vote)
