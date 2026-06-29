@@ -1,9 +1,71 @@
 @extends('layouts.app')
 @section('content')
+<style>
+    @media print {
+        @page {
+            margin: 14mm;
+        }
+
+        body {
+            background: #ffffff !important;
+            color: #000000 !important;
+        }
+
+        .sidebar,
+        .screen_loader,
+        .print-hidden,
+        .main-content > header,
+        .fixed,
+        script {
+            display: none !important;
+        }
+
+        .main-container,
+        .main-content,
+        .dvanimation,
+        .panel {
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            box-shadow: none !important;
+            border: 0 !important;
+            background: #ffffff !important;
+        }
+
+        .table-responsive {
+            overflow: visible !important;
+        }
+
+        table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            font-size: 13px;
+        }
+
+        th,
+        td {
+            border: 1px solid #000000 !important;
+            padding: 7px 8px !important;
+            color: #000000 !important;
+            background: transparent !important;
+        }
+
+        th {
+            font-weight: 700 !important;
+        }
+
+        tr {
+            break-inside: avoid;
+        }
+    }
+</style>
+
 <div class="panel">
-    <div class="mb-5 flex items-center justify-between">
+    <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
         <h5 class="text-lg font-semibold dark:text-white-light">Список заїзду</h5>
-        <!-- contextual -->
+        <button type="button" class="btn btn-primary print-hidden" onclick="window.print()">
+            Друк
+        </button>
     </div>
 
     @if(session('success'))
@@ -27,13 +89,13 @@
             <table class="table-hover table">
                 <thead>
                 <tr>
-                    <th>#</th>
-                    <th class="w-20">Фото</th>
+                    <th class="print-hidden">#</th>
+                    <th class="w-20 print-hidden">Фото</th>
                     <th>Ім'я</th>
 {{--                    <th>Номер телефону</th>--}}
                     <th>Команда</th>
                     <th>PIN-код</th>
-                    <th class="w-40 text-right">Дії</th>
+                    <th class="w-40 text-right print-hidden">Дії</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -43,8 +105,8 @@
                 @foreach($users as $user)
 
                     <tr style="background-color: {{ $user->team->element->color ?? '#ffffff' }};">
-                        <td>{{ $i }}</td>
-                        <td>
+                        <td class="print-hidden">{{ $i }}</td>
+                        <td class="print-hidden">
                             <img
                                 src="{{ $user->image_url }}"
                                 alt="{{ $user->name }}"
@@ -55,7 +117,7 @@
 {{--                        <td>{{ $user->phone_number }}</td>--}}
                         <td>{{ $user->team->name ?? '' }}</td>
                         <td>{{ $user->pin_code ?? '—' }}</td>
-                        <td>
+                        <td class="print-hidden">
                             <div class="flex justify-end">
                                 <a href="{{ route('users.edit', $user) }}" class="btn btn-outline-primary btn-sm">
                                     Редагувати
