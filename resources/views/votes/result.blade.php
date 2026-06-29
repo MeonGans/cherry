@@ -1,93 +1,27 @@
-@extends('layouts.users.app')
+@extends('layouts.app2')
 
 @section('content')
-    <section id="voteResultScreen" class="vote-results-screen" style="--team-count: {{ max($teams->count(), 1) }}">
-        <div class="result-frame">
-            <header class="result-topbar">
-                <div class="result-title">
-                    <p>Командне голосування</p>
-                    <h1>{{ $vote->name }}</h1>
-                </div>
-
-                <div class="result-actions">
-                    <p id="resultStatus" class="result-status">Результати запечатані</p>
-                    <button id="fullscreenBtn" class="result-icon-button" type="button" aria-label="На весь екран" title="На весь екран">
-                        <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
-                        </svg>
-                        <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
-                        </svg>
-                    </button>
-                </div>
-            </header>
-
-            @if($teams->isEmpty())
-                <div class="empty-results">
-                    <p>Ще немає голосів.</p>
-                </div>
-            @else
-                <div id="teamResults" class="team-results" data-max="{{ $maxVotes }}">
-                    @foreach($teams as $team)
-                        @php
-                            $scoreScale = $maxVotes > 0 ? max(0.07, $team['count'] / $maxVotes) : 0.07;
-                            $fallback = mb_substr($team['element_name'], 0, 1);
-                        @endphp
-
-                        <article
-                            class="team-result-card {{ $team['is_winner'] ? 'is-winner' : '' }}"
-                            style="--team-color: {{ $team['color'] }}; --score-scale: {{ $scoreScale }};"
-                            data-score="{{ $team['count'] }}"
-                        >
-                            <div class="score-column" aria-hidden="true">
-                                <div class="score-rail">
-                                    <div class="score-fill"></div>
-                                </div>
-                            </div>
-
-                            <div class="team-meta">
-                                <div class="team-mark" data-fallback="{{ $fallback }}">
-                                    <img
-                                        src="{{ asset($team['logo']) }}"
-                                        alt="{{ $team['element_name'] }}"
-                                        onerror="this.parentElement.classList.add('mark-fallback'); this.remove();"
-                                    >
-                                </div>
-
-                                <div class="team-copy">
-                                    <p>{{ $team['element_name'] }}</p>
-                                    <h2>{{ $team['name'] }}</h2>
-                                </div>
-
-                                <div class="score-number" aria-label="{{ $team['count'] }} балів">
-                                    <span class="score-secret">?</span>
-                                    <span class="score-open">{{ $team['count'] }}</span>
-                                </div>
-                            </div>
-                        </article>
-                    @endforeach
-                </div>
-
-                <div class="result-footer">
-                    <button id="revealBtn" class="reveal-results-button" type="button">
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                            <path d="M12 5v14M5 12h14" />
-                        </svg>
-                        <span>Відкрити результати</span>
-                    </button>
-                </div>
-            @endif
-        </div>
-    </section>
-@endsection
-
-@section('styles')
     <style>
+        body:has(.vote-results-screen) .main-container .main-content {
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+        }
+
+        body:has(.vote-results-screen) .dvanimation,
+        body:has(.vote-results-screen) [x-data="basic"] {
+            min-height: 100svh;
+            padding: 0 !important;
+        }
+
+        body:has(.vote-results-screen) {
+            background: #111111;
+        }
+
         .vote-results-screen {
             --stage-bg: #111111;
             --stage-ink: #fffaf0;
             --muted-ink: rgba(255, 250, 240, .72);
-            height: calc(100svh - 128px);
+            height: 100svh;
             min-height: 0;
             overflow: hidden;
         }
@@ -100,8 +34,8 @@
             gap: 16px;
             height: 100%;
             overflow: hidden;
-            border: 1px solid rgba(255, 250, 240, .18);
-            border-radius: 8px;
+            border: 0;
+            border-radius: 0;
             background:
                 linear-gradient(135deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, 0) 36%),
                 repeating-linear-gradient(90deg, rgba(255, 255, 255, .035) 0 1px, transparent 1px 72px),
@@ -425,33 +359,8 @@
             overflow: hidden !important;
         }
 
-        body.vote-result-fullscreen .sidebar,
-        body.vote-result-fullscreen .main-content > header,
-        body.vote-result-fullscreen .screen_loader,
         body.vote-result-fullscreen .fixed.bottom-6 {
             display: none !important;
-        }
-
-        body.vote-result-fullscreen .main-container,
-        body.vote-result-fullscreen .main-content,
-        body.vote-result-fullscreen .dvanimation,
-        body.vote-result-fullscreen [x-data="basic"] {
-            width: 100% !important;
-            max-width: none !important;
-            min-height: 100svh !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            transform: none !important;
-        }
-
-        body.vote-result-fullscreen .vote-results-screen {
-            width: 100vw;
-            height: 100svh;
-        }
-
-        body.vote-result-fullscreen .result-frame {
-            border: 0;
-            border-radius: 0;
         }
 
         .vote-results-screen:fullscreen {
@@ -462,8 +371,6 @@
 
         .vote-results-screen:fullscreen .result-frame {
             height: 100%;
-            border: 0;
-            border-radius: 0;
         }
 
         .vote-results-screen:-webkit-full-screen {
@@ -474,15 +381,9 @@
 
         .vote-results-screen:-webkit-full-screen .result-frame {
             height: 100%;
-            border: 0;
-            border-radius: 0;
         }
 
         @media (max-width: 980px) {
-            .vote-results-screen {
-                height: calc(100svh - 112px);
-            }
-
             .result-frame {
                 gap: 12px;
                 padding: 16px;
@@ -588,10 +489,6 @@
         }
 
         @media (max-height: 620px) {
-            .vote-results-screen {
-                height: calc(100svh - 94px);
-            }
-
             .result-frame {
                 gap: 8px;
                 padding: 10px;
@@ -642,9 +539,86 @@
             }
         }
     </style>
-@endsection
 
-@section('scripts')
+    <section id="voteResultScreen" class="vote-results-screen" style="--team-count: {{ max($teams->count(), 1) }}">
+        <div class="result-frame">
+            <header class="result-topbar">
+                <div class="result-title">
+                    <p>Командне голосування</p>
+                    <h1>{{ $vote->name }}</h1>
+                </div>
+
+                <div class="result-actions">
+                    <p id="resultStatus" class="result-status">Результати запечатані</p>
+                    <button id="fullscreenBtn" class="result-icon-button" type="button" aria-label="На весь екран" title="На весь екран">
+                        <svg class="icon-enter" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" />
+                        </svg>
+                        <svg class="icon-exit" viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5" />
+                        </svg>
+                    </button>
+                </div>
+            </header>
+
+            @if($teams->isEmpty())
+                <div class="empty-results">
+                    <p>Ще немає голосів.</p>
+                </div>
+            @else
+                <div id="teamResults" class="team-results" data-max="{{ $maxVotes }}">
+                    @foreach($teams as $team)
+                        @php
+                            $scoreScale = $maxVotes > 0 ? max(0.07, $team['count'] / $maxVotes) : 0.07;
+                            $fallback = mb_substr($team['element_name'], 0, 1);
+                        @endphp
+
+                        <article
+                            class="team-result-card {{ $team['is_winner'] ? 'is-winner' : '' }}"
+                            style="--team-color: {{ $team['color'] }}; --score-scale: {{ $scoreScale }};"
+                            data-score="{{ $team['count'] }}"
+                        >
+                            <div class="score-column" aria-hidden="true">
+                                <div class="score-rail">
+                                    <div class="score-fill"></div>
+                                </div>
+                            </div>
+
+                            <div class="team-meta">
+                                <div class="team-mark" data-fallback="{{ $fallback }}">
+                                    <img
+                                        src="{{ asset($team['logo']) }}"
+                                        alt="{{ $team['element_name'] }}"
+                                        onerror="this.parentElement.classList.add('mark-fallback'); this.remove();"
+                                    >
+                                </div>
+
+                                <div class="team-copy">
+                                    <p>{{ $team['element_name'] }}</p>
+                                    <h2>{{ $team['name'] }}</h2>
+                                </div>
+
+                                <div class="score-number" aria-label="{{ $team['count'] }} балів">
+                                    <span class="score-secret">?</span>
+                                    <span class="score-open">{{ $team['count'] }}</span>
+                                </div>
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <div class="result-footer">
+                    <button id="revealBtn" class="reveal-results-button" type="button">
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                            <path d="M12 5v14M5 12h14" />
+                        </svg>
+                        <span>Відкрити результати</span>
+                    </button>
+                </div>
+            @endif
+        </div>
+    </section>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const revealButton = document.getElementById('revealBtn');

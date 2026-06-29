@@ -225,10 +225,11 @@ class VoteController extends Controller
                     'element_name' => $team->element?->name ?? $team->name,
                     'logo' => $this->elementLogoPath($team),
                     'is_winner' => $maxVotes > 0 && $count === $maxVotes,
+                    'order' => $this->teamRevealOrder($team),
                 ];
             })
             ->sortBy([
-                ['count', 'asc'],
+                ['order', 'asc'],
                 ['name', 'asc'],
             ])
             ->values();
@@ -430,6 +431,27 @@ class VoteController extends Controller
         }
 
         return 'assets/images/elements/' . ($team->element_id ?: 1) . '.png';
+    }
+
+    private function teamRevealOrder(Team $team): int
+    {
+        $name = mb_strtolower(trim(($team->element?->name ?? '') . ' ' . $team->name));
+
+        $order = [
+            'вогонь' => 10,
+            'повітря' => 20,
+            'вода' => 30,
+            'земля' => 40,
+            'метал' => 50,
+        ];
+
+        foreach ($order as $needle => $position) {
+            if (str_contains($name, $needle)) {
+                return $position;
+            }
+        }
+
+        return 1000 + $team->id;
     }
 
     private function photoResult(Vote $vote)
