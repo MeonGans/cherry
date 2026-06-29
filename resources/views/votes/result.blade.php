@@ -30,13 +30,13 @@
                 <div id="teamResults" class="team-results" data-max="{{ $maxVotes }}">
                     @foreach($teams as $team)
                         @php
-                            $scoreSize = $maxVotes > 0 ? max(7, ($team['count'] / $maxVotes) * 100) : 7;
+                            $scoreScale = $maxVotes > 0 ? max(0.07, $team['count'] / $maxVotes) : 0.07;
                             $fallback = mb_substr($team['element_name'], 0, 1);
                         @endphp
 
                         <article
                             class="team-result-card {{ $team['is_winner'] ? 'is-winner' : '' }}"
-                            style="--team-color: {{ $team['color'] }}; --score-size: {{ $scoreSize }}%;"
+                            style="--team-color: {{ $team['color'] }}; --score-scale: {{ $scoreScale }};"
                             data-score="{{ $team['count'] }}"
                         >
                             <div class="score-column" aria-hidden="true">
@@ -230,13 +230,11 @@
                 linear-gradient(180deg, color-mix(in srgb, var(--team-color) 18%, transparent), rgba(255, 255, 255, .055)),
                 rgba(255, 255, 255, .07);
             padding: 14px;
-            filter: saturate(.56);
-            opacity: .82;
-            transition: border-color .5s ease, box-shadow .5s ease, filter .5s ease, opacity .5s ease, transform .5s ease;
+            opacity: .84;
+            transition: border-color .5s ease, box-shadow .5s ease, opacity .5s ease, transform .5s ease;
         }
 
         .team-result-card.is-visible {
-            filter: saturate(1);
             opacity: 1;
         }
 
@@ -277,17 +275,21 @@
             right: 0;
             bottom: 0;
             left: 0;
-            height: 0;
+            top: 0;
+            height: 100%;
             border-radius: 8px 8px 0 0;
             background:
                 linear-gradient(180deg, color-mix(in srgb, var(--team-color) 62%, #ffffff), var(--team-color)),
                 var(--team-color);
             box-shadow: 0 0 28px color-mix(in srgb, var(--team-color) 52%, transparent);
-            transition: height 1.05s cubic-bezier(.2, .8, .2, 1);
+            transform: scaleY(0);
+            transform-origin: bottom;
+            transition: transform 1.65s cubic-bezier(.16, 1, .3, 1);
+            will-change: transform;
         }
 
         .team-result-card.is-visible .score-fill {
-            height: var(--score-size);
+            transform: scaleY(var(--score-scale));
         }
 
         .team-meta {
@@ -386,12 +388,14 @@
 
         .result-footer {
             display: flex;
+            align-items: center;
             justify-content: center;
             min-height: 44px;
         }
 
         .reveal-results-button {
             gap: 10px;
+            flex: 0 0 auto;
             min-height: 44px;
             background: #fffaf0;
             padding: 0 18px;
@@ -422,7 +426,7 @@
         }
 
         body.vote-result-fullscreen .sidebar,
-        body.vote-result-fullscreen header,
+        body.vote-result-fullscreen .main-content > header,
         body.vote-result-fullscreen .screen_loader,
         body.vote-result-fullscreen .fixed.bottom-6 {
             display: none !important;
@@ -457,7 +461,7 @@
         }
 
         .vote-results-screen:fullscreen .result-frame {
-            height: 100vh;
+            height: 100%;
             border: 0;
             border-radius: 0;
         }
@@ -469,7 +473,7 @@
         }
 
         .vote-results-screen:-webkit-full-screen .result-frame {
-            height: 100vh;
+            height: 100%;
             border: 0;
             border-radius: 0;
         }
@@ -551,15 +555,15 @@
             .score-fill {
                 top: 0;
                 right: auto;
-                width: 0;
+                width: 100%;
                 height: 100%;
                 border-radius: 8px;
-                transition-property: width;
+                transform: scaleX(0);
+                transform-origin: left;
             }
 
             .team-result-card.is-visible .score-fill {
-                width: var(--score-size);
-                height: 100%;
+                transform: scaleX(var(--score-scale));
             }
 
             .team-meta {
@@ -657,14 +661,18 @@
 
             if (revealButton && cards.length > 0) {
                 revealButton.addEventListener('click', () => {
+                    const revealStepMs = 760;
+
                     revealButton.disabled = true;
-                    revealButton.querySelector('span').textContent = 'Відкриваємо...';
                     setStatus('Рахунок відкривається поступово');
+                    revealButton.remove();
 
                     cards.forEach((card, index) => {
                         window.setTimeout(() => {
-                            card.classList.add('is-visible');
-                        }, index * 900);
+                            window.requestAnimationFrame(() => {
+                                card.classList.add('is-visible');
+                            });
+                        }, index * revealStepMs);
                     });
 
                     window.setTimeout(() => {
@@ -675,8 +683,7 @@
                         });
 
                         setStatus('Переможця відкрито');
-                        revealButton.remove();
-                    }, cards.length * 900 + 650);
+                    }, cards.length * revealStepMs + 900);
                 });
             }
 
