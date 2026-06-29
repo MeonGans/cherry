@@ -292,9 +292,9 @@
 
         .team-meta {
             display: grid;
-            grid-template-columns: auto minmax(0, 1fr) auto;
+            grid-template-columns: clamp(48px, 4.2vw, 64px) minmax(0, 1fr) clamp(48px, 4.2vw, 58px);
             align-items: center;
-            gap: 12px;
+            gap: clamp(8px, .9vw, 12px);
             min-width: 0;
             border: 1px solid rgba(255, 255, 255, .12);
             border-radius: 8px;
@@ -305,7 +305,7 @@
         .team-mark {
             position: relative;
             display: grid;
-            width: 64px;
+            width: 100%;
             aspect-ratio: 1;
             place-items: center;
             overflow: hidden;
@@ -329,28 +329,36 @@
 
         .team-copy {
             min-width: 0;
+            text-align: left;
+        }
+
+        .team-copy p {
+            display: none;
         }
 
         .team-copy h2 {
-            margin: 2px 0 0;
-            overflow-wrap: anywhere;
+            margin: 0;
+            overflow: hidden;
             color: #ffffff;
-            font-size: 1.45rem;
+            font-size: clamp(1rem, 1.18vw, 1.28rem);
             font-weight: 900;
-            line-height: 1.08;
+            line-height: 1.05;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: keep-all;
         }
 
         .score-number {
             position: relative;
             display: grid;
-            width: 58px;
+            width: 100%;
             aspect-ratio: 1;
             place-items: center;
             flex: 0 0 auto;
             border-radius: 8px;
             background: #fffaf0;
             color: #111111;
-            font-size: 2rem;
+            font-size: clamp(1.35rem, 2vw, 2rem);
             font-weight: 900;
             line-height: 1;
         }
@@ -425,16 +433,43 @@
         body.vote-result-fullscreen .dvanimation,
         body.vote-result-fullscreen [x-data="basic"] {
             width: 100% !important;
+            max-width: none !important;
             min-height: 100svh !important;
             margin: 0 !important;
             padding: 0 !important;
+            transform: none !important;
         }
 
         body.vote-result-fullscreen .vote-results-screen {
+            width: 100vw;
             height: 100svh;
         }
 
         body.vote-result-fullscreen .result-frame {
+            border: 0;
+            border-radius: 0;
+        }
+
+        .vote-results-screen:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            background: var(--stage-bg);
+        }
+
+        .vote-results-screen:fullscreen .result-frame {
+            height: 100vh;
+            border: 0;
+            border-radius: 0;
+        }
+
+        .vote-results-screen:-webkit-full-screen {
+            width: 100vw;
+            height: 100vh;
+            background: var(--stage-bg);
+        }
+
+        .vote-results-screen:-webkit-full-screen .result-frame {
+            height: 100vh;
             border: 0;
             border-radius: 0;
         }
@@ -456,6 +491,14 @@
             .team-meta {
                 grid-template-columns: minmax(0, 1fr);
                 justify-items: center;
+                text-align: center;
+            }
+
+            .team-mark {
+                width: 52px;
+            }
+
+            .team-copy {
                 text-align: center;
             }
 
@@ -520,14 +563,14 @@
             }
 
             .team-meta {
-                grid-template-columns: auto minmax(0, 1fr) auto;
+                grid-template-columns: 48px minmax(0, 1fr) 46px;
                 justify-items: stretch;
                 padding: 8px;
                 text-align: left;
             }
 
             .team-mark {
-                width: 48px;
+                width: 100%;
             }
 
             .team-copy h2 {
@@ -535,7 +578,7 @@
             }
 
             .score-number {
-                width: 46px;
+                width: 100%;
                 font-size: 1.45rem;
             }
         }
@@ -602,6 +645,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const revealButton = document.getElementById('revealBtn');
             const fullscreenButton = document.getElementById('fullscreenBtn');
+            const fullscreenTarget = document.getElementById('voteResultScreen');
             const status = document.getElementById('resultStatus');
             const cards = Array.from(document.querySelectorAll('.team-result-card'));
 
@@ -639,7 +683,7 @@
             let fallbackFullscreen = false;
 
             const syncFullscreenState = () => {
-                const isFullscreen = Boolean(document.fullscreenElement) || fallbackFullscreen;
+                const isFullscreen = document.fullscreenElement === fullscreenTarget || fallbackFullscreen;
 
                 document.body.classList.toggle('vote-result-fullscreen', isFullscreen);
 
@@ -650,11 +694,11 @@
                 }
             };
 
-            if (fullscreenButton) {
+            if (fullscreenButton && fullscreenTarget) {
                 fullscreenButton.addEventListener('click', async () => {
                     try {
-                        if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
-                            await document.documentElement.requestFullscreen();
+                        if (!document.fullscreenElement && fullscreenTarget.requestFullscreen) {
+                            await fullscreenTarget.requestFullscreen();
                             fallbackFullscreen = false;
                         } else if (document.fullscreenElement && document.exitFullscreen) {
                             await document.exitFullscreen();
@@ -670,7 +714,7 @@
                 });
 
                 document.addEventListener('fullscreenchange', () => {
-                    if (!document.fullscreenElement) {
+                    if (document.fullscreenElement !== fullscreenTarget) {
                         fallbackFullscreen = false;
                     }
 

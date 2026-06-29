@@ -417,9 +417,10 @@ class VoteController extends Controller
 
         $logos = [
             'вогонь' => 'assets/images/elements/1.png',
-            'вода' => 'assets/images/elements/2.png',
-            'повітря' => 'assets/images/elements/3.png',
+            'повітря' => 'assets/images/elements/2.png',
+            'вода' => 'assets/images/elements/3.png',
             'земля' => 'assets/images/elements/4.png',
+            'метал' => 'assets/images/elements/5.png',
         ];
 
         foreach ($logos as $needle => $path) {
