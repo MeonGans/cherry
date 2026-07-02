@@ -44,7 +44,7 @@
             </div>
 
             <div id="oscarInfoBlock" class="mb-4 hidden rounded border border-warning p-4 dark:border-warning">
-                <p class="font-semibold">Номінації: режисер, чоловіча роль, жіноча роль, монтаж, оператор.</p>
+                <p class="font-semibold">Номінації: оператор, монтаж, жіноча роль, чоловіча роль, режисер.</p>
                 @if($activeSession)
                     <p class="mt-2 text-sm text-white-dark">
                         Кандидати підтягнуться з активної сесії #{{ $activeSession->id }}

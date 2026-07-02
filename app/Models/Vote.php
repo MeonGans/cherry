@@ -14,28 +14,28 @@ class Vote extends Model
     public const TYPE_OSCAR = 'oscar';
 
     public const OSCAR_NOMINATIONS = [
-        'best_director' => [
-            'title' => 'Кращий режисер',
+        'best_camera' => [
+            'title' => 'Кращий оператор',
             'limit' => 1,
             'gender' => null,
-        ],
-        'best_actor' => [
-            'title' => 'Краща чоловіча роль',
-            'limit' => 3,
-            'gender' => 'male',
-        ],
-        'best_actress' => [
-            'title' => 'Краща жіноча роль',
-            'limit' => 3,
-            'gender' => 'female',
         ],
         'best_editing' => [
             'title' => 'Кращий монтаж',
             'limit' => 1,
             'gender' => null,
         ],
-        'best_camera' => [
-            'title' => 'Кращий оператор',
+        'best_actress' => [
+            'title' => 'Краща жіноча роль',
+            'limit' => 3,
+            'gender' => 'female',
+        ],
+        'best_actor' => [
+            'title' => 'Краща чоловіча роль',
+            'limit' => 3,
+            'gender' => 'male',
+        ],
+        'best_director' => [
+            'title' => 'Кращий режисер',
             'limit' => 1,
             'gender' => null,
         ],

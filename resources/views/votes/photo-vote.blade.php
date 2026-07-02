@@ -5,7 +5,7 @@
 @section('styles')
     <style>
         .vote-shell {
-            width: min(100%, 1120px);
+            width: min(100%, 980px);
         }
 
         .photo-vote-toolbar {
@@ -33,13 +33,14 @@
             color: #ffffff;
             font-weight: 900;
             padding: 0 14px;
+            white-space: nowrap;
         }
 
-        .photo-vote-grid {
+        .photo-vote-list {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 14px;
-            margin-top: 18px;
+            grid-template-columns: minmax(0, 1fr);
+            gap: 22px;
+            margin-top: 22px;
         }
 
         .photo-option {
@@ -58,53 +59,51 @@
         .photo-frame {
             position: relative;
             display: grid;
-            min-height: 258px;
             overflow: hidden;
             border: 1px solid var(--vote-line);
-            border-radius: 18px;
+            border-radius: 8px;
             background: #ffffff;
             box-shadow: 0 10px 26px rgba(21, 24, 39, 0.07);
             cursor: pointer;
+            padding: 12px;
             transition: border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease, opacity 160ms ease;
         }
 
-        .photo-frame img {
-            display: block;
-            width: 100%;
-            aspect-ratio: 4 / 3;
-            background: #eef1f6;
-            object-fit: cover;
-        }
-
-        .photo-title {
+        .photo-image-wrap {
             display: flex;
-            min-height: 62px;
             align-items: center;
             justify-content: center;
-            color: var(--vote-ink);
-            font-size: 15px;
-            font-weight: 900;
-            line-height: 1.25;
-            padding: 12px;
-            text-align: center;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #eef1f6;
+        }
+
+        .photo-image-wrap img {
+            display: block;
+            width: auto;
+            max-width: 100%;
+            height: auto;
+            max-height: min(78vh, 820px);
+            object-fit: contain;
         }
 
         .photo-check {
             position: absolute;
-            top: 12px;
-            right: 12px;
+            top: 22px;
+            right: 22px;
             display: grid;
-            width: 32px;
-            height: 32px;
+            width: 38px;
+            height: 38px;
             place-items: center;
             border-radius: 999px;
             background: #ffffff;
             color: var(--vote-primary);
-            font-size: 16px;
+            font-size: 18px;
             font-weight: 900;
             opacity: 0;
             transform: scale(0.82);
             transition: opacity 160ms ease, transform 160ms ease;
+            z-index: 2;
         }
 
         .photo-frame:hover {
@@ -141,20 +140,17 @@
                 flex-direction: column;
             }
 
-            .photo-vote-grid {
-                grid-template-columns: repeat(2, minmax(0, 1fr));
-                gap: 10px;
+            .photo-vote-list {
+                gap: 16px;
             }
 
             .photo-frame {
-                min-height: 214px;
-                border-radius: 16px;
+                padding: 8px;
             }
 
-            .photo-title {
-                min-height: 56px;
-                font-size: 13px;
-                padding: 9px;
+            .photo-check {
+                top: 16px;
+                right: 16px;
             }
         }
     </style>
@@ -193,9 +189,9 @@
                         <span id="selectedCounter" class="photo-vote-counter">0 / 3</span>
                     </div>
 
-                    <div class="photo-vote-grid" aria-label="Оберіть 3 фотографії">
+                    <div class="photo-vote-list" aria-label="Оберіть 3 фотографії">
                         @foreach($photos as $photo)
-                            <label class="photo-option">
+                            <label class="photo-option" aria-label="Обрати фото">
                                 <input
                                     type="checkbox"
                                     name="photo_ids[]"
@@ -204,9 +200,10 @@
                                     @checked(in_array((string) $photo->id, $oldPhotoIds, true))
                                 >
                                 <span class="photo-frame">
-                                    <img src="{{ asset($photo->image_path) }}" alt="{{ $photo->title ?? 'Фото ' . $loop->iteration }}">
+                                    <span class="photo-image-wrap">
+                                        <img src="{{ asset($photo->image_path) }}" alt="Фото для голосування">
+                                    </span>
                                     <span class="photo-check" aria-hidden="true">✓</span>
-                                    <span class="photo-title">{{ $photo->title ?? 'Фото ' . $loop->iteration }}</span>
                                 </span>
                             </label>
                         @endforeach

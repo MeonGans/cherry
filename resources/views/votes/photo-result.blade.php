@@ -1,134 +1,302 @@
-@extends('layouts.users.app')
+@extends('layouts.app2')
 
 @section('content')
-    <div class="mt-8 mb-5">
-        <div class="mb-6 text-center">
-            <h1 class="text-3xl font-black text-black dark:text-white">{{ $vote->name }}</h1>
-            <p id="resultStatus" class="mt-2 text-base font-semibold text-white-dark">Результати приховано до натискання кнопки.</p>
-        </div>
-
-        @if($photos->isEmpty())
-            <div class="panel text-center">
-                <p>Фото ще не завантажено.</p>
-            </div>
-        @else
-            <div id="photoResults" class="photo-results">
-                @foreach($photos as $photo)
-                    @php
-                        $isWinner = $maxVotes > 0 && $photo->score === $maxVotes;
-                    @endphp
-                    <article class="photo-result-card {{ $isWinner ? 'is-winner' : '' }}" data-score="{{ $photo->score }}">
-                        <div class="image-wrap">
-                            <img src="{{ asset($photo->image_path) }}" alt="{{ $photo->title ?? 'Фото ' . $loop->iteration }}">
-                        </div>
-                        <div class="photo-result-body">
-                            <h2>{{ $photo->title ?? 'Фото ' . $loop->iteration }}</h2>
-                            <p class="score">{{ $photo->score }} балів</p>
-                            @if($isWinner)
-                                <p class="winner-label">Переможець</p>
-                            @endif
-                        </div>
-                    </article>
-                @endforeach
-            </div>
-
-            <button id="revealPhotoResult" class="btn btn-primary mx-auto mt-8 block">Результат</button>
-        @endif
-    </div>
-@endsection
-
-@section('styles')
     <style>
-        .photo-results {
+        body:has(.photo-awards-stage) {
+            background: #0d0b08;
+        }
+
+        body:has(.photo-awards-stage) .dvanimation,
+        body:has(.photo-awards-stage) [x-data="basic"] {
+            min-height: 100svh;
+            padding: 0 !important;
+        }
+
+        body:has(.photo-awards-stage) .fixed.bottom-6 {
+            display: none !important;
+        }
+
+        .photo-awards-stage {
+            --photo-bg: #0d0b08;
+            --photo-panel: rgba(255, 250, 240, .075);
+            --photo-line: rgba(244, 211, 107, .22);
+            --photo-gold: #d4af37;
+            --photo-gold-soft: #f4d36b;
+            --photo-ink: #fffaf0;
+            --photo-muted: rgba(255, 250, 240, .68);
+            min-height: 100svh;
+            background:
+                linear-gradient(180deg, rgba(244, 211, 107, .1), transparent 30%),
+                repeating-linear-gradient(90deg, rgba(255, 250, 240, .035) 0 1px, transparent 1px 92px),
+                var(--photo-bg);
+            color: var(--photo-ink);
+            padding: clamp(14px, 2vw, 26px);
+            user-select: none;
+        }
+
+        .photo-stage-frame {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 18px;
-            max-width: 1180px;
+            width: min(100%, 1540px);
             margin: 0 auto;
         }
 
-        .photo-result-card {
-            overflow: hidden;
-            border: 1px solid #e0e6ed;
+        .photo-stage-header,
+        .photo-stage-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-width: 0;
+            border: 1px solid var(--photo-line);
             border-radius: 8px;
-            background: #fff;
-            box-shadow: 0 8px 20px rgba(31, 45, 61, .08);
-            filter: grayscale(.55);
-            opacity: .7;
-            transform: translateY(10px);
-            transition: transform .55s ease, opacity .55s ease, filter .55s ease, box-shadow .55s ease, border-color .55s ease;
+            background: rgba(0, 0, 0, .22);
+            padding: clamp(14px, 2vw, 20px);
         }
 
-        .photo-result-card .image-wrap {
-            background: #f1f2f3;
+        .photo-stage-title {
+            min-width: 0;
+        }
+
+        .photo-kicker,
+        .photo-stage-status {
+            margin: 0;
+            color: var(--photo-muted);
+            font-weight: 900;
+            letter-spacing: 0;
+            text-transform: uppercase;
+        }
+
+        .photo-kicker {
+            font-size: .78rem;
+        }
+
+        .photo-stage-title h1 {
+            margin: 4px 0 0;
+            overflow: hidden;
+            color: #ffffff;
+            font-size: clamp(1.8rem, 4vw, 3.5rem);
+            font-weight: 900;
+            line-height: 1.04;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .photo-count {
+            display: grid;
+            width: clamp(78px, 8vw, 112px);
+            aspect-ratio: 1;
+            place-items: center;
+            border: 1px solid rgba(244, 211, 107, .48);
+            border-radius: 999px;
+            background: rgba(212, 175, 55, .14);
+            color: var(--photo-gold-soft);
+            font-size: clamp(1.5rem, 3vw, 2.6rem);
+            font-weight: 900;
+        }
+
+        .photo-results-empty {
+            display: grid;
+            min-height: 50svh;
+            place-items: center;
+            border: 1px dashed rgba(244, 211, 107, .28);
+            border-radius: 8px;
+            background: var(--photo-panel);
+            color: var(--photo-muted);
+            font-size: 1.2rem;
+            font-weight: 900;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .photo-result-gallery {
+            columns: 4 270px;
+            column-gap: 18px;
+        }
+
+        .photo-result-card {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+            margin: 0 0 18px;
+            overflow: hidden;
+            break-inside: avoid;
+            border: 1px solid rgba(244, 211, 107, .2);
+            border-radius: 8px;
+            background: rgba(255, 250, 240, .08);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, .2);
+            filter: saturate(.72);
+            opacity: .58;
+            transform: translateY(10px);
+            transition: transform .55s ease, opacity .55s ease, filter .55s ease, box-shadow .55s ease, border-color .55s ease;
         }
 
         .photo-result-card img {
             display: block;
             width: 100%;
             height: auto;
+            background: rgba(0, 0, 0, .28);
+            object-fit: contain;
         }
 
         .photo-result-body {
-            padding: 12px;
-            text-align: center;
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            left: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            opacity: 0;
+            transform: translateY(8px);
+            transition: opacity .35s ease, transform .35s ease;
         }
 
-        .photo-result-body h2 {
-            margin: 0;
-            font-size: 1rem;
-            font-weight: 800;
+        .score,
+        .winner-label {
+            display: inline-flex;
+            min-height: 34px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 999px;
+            font-weight: 900;
+            padding: 0 12px;
         }
 
         .score {
-            margin-top: 8px;
-            font-size: 1.1rem;
-            font-weight: 900;
-            color: #4361ee;
-            opacity: 0;
-            transform: translateY(6px);
-            transition: opacity .4s ease, transform .4s ease;
+            background: rgba(0, 0, 0, .72);
+            color: var(--photo-gold-soft);
         }
 
         .winner-label {
-            display: none;
-            margin-top: 8px;
-            border-radius: 999px;
-            background: #00ab55;
-            padding: 5px 10px;
-            color: #fff;
-            font-weight: 900;
+            background: var(--photo-gold);
+            color: #111111;
         }
 
         .photo-result-card.revealed {
-            filter: grayscale(0);
+            filter: saturate(1);
             opacity: 1;
             transform: translateY(0);
         }
 
-        .photo-result-card.revealed .score {
+        .photo-result-card.revealed .photo-result-body {
             opacity: 1;
             transform: translateY(0);
         }
 
         .photo-result-card.revealed.is-winner {
-            border-color: #00ab55;
-            box-shadow: 0 18px 36px rgba(0, 171, 85, .24);
-            transform: translateY(-6px) scale(1.02);
+            border-color: rgba(244, 211, 107, .95);
+            box-shadow: 0 22px 64px rgba(212, 175, 55, .28);
+            transform: translateY(-4px);
         }
 
-        .photo-result-card.revealed.is-winner .winner-label {
-            display: inline-block;
+        .photo-stage-status {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .photo-reveal-button {
+            display: inline-flex;
+            min-height: 46px;
+            align-items: center;
+            justify-content: center;
+            border: 0;
+            border-radius: 8px;
+            background: var(--photo-gold);
+            color: #111111;
+            cursor: pointer;
+            font: inherit;
+            font-weight: 900;
+            padding: 0 20px;
+            white-space: nowrap;
+            transition: background .2s ease, opacity .2s ease, transform .2s ease;
+        }
+
+        .photo-reveal-button:hover:not(:disabled) {
+            background: var(--photo-gold-soft);
+            transform: translateY(-1px);
+        }
+
+        .photo-reveal-button:disabled {
+            cursor: default;
+            opacity: .68;
+        }
+
+        @media (max-width: 760px) {
+            .photo-stage-header,
+            .photo-stage-footer {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .photo-stage-title h1 {
+                white-space: normal;
+            }
+
+            .photo-count {
+                width: 68px;
+            }
+
+            .photo-stage-status,
+            .photo-reveal-button {
+                width: 100%;
+            }
         }
     </style>
-@endsection
 
-@section('scripts')
+    <section id="photoAwardsStage" class="photo-awards-stage" aria-label="Результати фото-голосування">
+        <div class="photo-stage-frame">
+            <header class="photo-stage-header">
+                <div class="photo-stage-title">
+                    <p class="photo-kicker">Cherry Camp Awards</p>
+                    <h1>{{ $vote->name }}</h1>
+                </div>
+                <div class="photo-count" aria-label="{{ $photos->count() }} фото">{{ $photos->count() }}</div>
+            </header>
+
+            @if($photos->isEmpty())
+                <div class="photo-results-empty">
+                    Фото ще не завантажено.
+                </div>
+            @else
+                <div id="photoResults" class="photo-result-gallery">
+                    @foreach($photos as $photo)
+                        @php
+                            $isWinner = $maxVotes > 0 && $photo->score === $maxVotes;
+                        @endphp
+                        <article class="photo-result-card {{ $isWinner ? 'is-winner' : '' }}" data-score="{{ $photo->score }}">
+                            <img src="{{ asset($photo->image_path) }}" alt="Фото учасника">
+                            <div class="photo-result-body">
+                                <span class="score">{{ $photo->score }} балів</span>
+                                @if($isWinner)
+                                    <span class="winner-label">Переможець</span>
+                                @endif
+                            </div>
+                        </article>
+                    @endforeach
+                </div>
+
+                <footer class="photo-stage-footer">
+                    <p id="resultStatus" class="photo-stage-status">Результати запечатані</p>
+                    <button id="revealPhotoResult" class="photo-reveal-button" type="button">Відкрити переможця</button>
+                </footer>
+            @endif
+        </div>
+    </section>
+
     <script>
         document.addEventListener('DOMContentLoaded', () => {
+            const stage = document.getElementById('photoAwardsStage');
             const button = document.getElementById('revealPhotoResult');
             const status = document.getElementById('resultStatus');
             const cards = Array.from(document.querySelectorAll('.photo-result-card'));
+
+            if (stage) {
+                stage.addEventListener('contextmenu', (event) => event.preventDefault());
+            }
 
             if (!button || cards.length === 0) {
                 return;
@@ -137,17 +305,27 @@
             button.addEventListener('click', () => {
                 button.disabled = true;
                 button.textContent = 'Відкриваємо...';
-                status.textContent = 'Рахунок відкривається поступово.';
+
+                if (status) {
+                    status.textContent = 'Відкриваємо галерею';
+                }
 
                 cards.forEach((card, index) => {
-                    setTimeout(() => {
+                    window.setTimeout(() => {
                         card.classList.add('revealed');
 
                         if (index === cards.length - 1) {
-                            status.textContent = 'Переможця відкрито.';
-                            button.remove();
+                            if (status) {
+                                status.textContent = 'Переможця відкрито';
+                            }
+                            document.querySelector('.photo-result-card.is-winner')?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center',
+                                inline: 'center',
+                            });
+                            button.textContent = 'Готово';
                         }
-                    }, index * 900);
+                    }, index * 180);
                 });
             });
         });
