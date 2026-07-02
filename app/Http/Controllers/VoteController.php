@@ -543,16 +543,25 @@ class VoteController extends Controller
                 ->select('users.*')
                 ->selectRaw('COALESCE(score_totals.total, 0) as oscar_score')
                 ->get()
-                ->map(function (User $candidate) {
+                ->map(function (User $candidate) use ($vote, $key) {
                     $candidate->oscar_score = (int) $candidate->oscar_score;
+                    $candidate->oscar_display_order = (int) sprintf(
+                        '%u',
+                        crc32($vote->id . '|' . $key . '|' . $candidate->id)
+                    );
 
                     return $candidate;
                 })
                 ->filter(fn (User $candidate) => $candidate->oscar_score > 0)
-                ->sortBy([
-                    ['oscar_score', 'asc'],
-                    ['name', 'asc'],
-                ])
+                ->sortBy($showScores
+                    ? [
+                        ['oscar_score', 'asc'],
+                        ['name', 'asc'],
+                    ]
+                    : [
+                        ['oscar_display_order', 'asc'],
+                        ['name', 'asc'],
+                    ])
                 ->values();
 
             $winnerScore = $nominees->reduce(
