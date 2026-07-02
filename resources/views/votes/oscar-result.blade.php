@@ -188,18 +188,18 @@
         }
 
         .envelope-panel {
-            position: absolute;
-            inset: clamp(12px, 1.6vw, 20px);
-            z-index: 8;
+            position: fixed;
+            inset: 0;
+            z-index: 300;
             display: grid;
             place-items: center;
-            border-radius: 8px;
             background:
-                radial-gradient(circle at center, rgba(212, 175, 55, .2), transparent 42%),
-                rgba(13, 11, 8, .5);
-            backdrop-filter: blur(2px);
+                radial-gradient(circle at center, rgba(212, 175, 55, .24), transparent 44%),
+                rgba(13, 11, 8, .72);
+            backdrop-filter: blur(4px);
             opacity: 0;
-            perspective: 900px;
+            overflow: hidden;
+            perspective: 1200px;
             pointer-events: none;
             transform: scale(.98);
             transition: opacity .45s ease, transform .45s ease, visibility .45s ease;
@@ -214,6 +214,7 @@
 
         .award-envelope-scene {
             position: relative;
+            z-index: 4;
             width: min(460px, 74vw);
             aspect-ratio: 1.65 / 1;
             filter: drop-shadow(0 26px 42px rgba(0, 0, 0, .38));
@@ -222,7 +223,7 @@
         }
 
         .award-slide.is-opening .award-envelope-scene {
-            animation: envelopeSceneArrive 3.2s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: envelopeSceneArrive 4s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-envelope {
@@ -264,6 +265,31 @@
             transition: transform .9s cubic-bezier(.16, 1, .3, 1), opacity .45s ease;
         }
 
+        .award-winner-photo-card {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            z-index: 3;
+            display: grid;
+            grid-template-rows: minmax(0, 1fr) auto;
+            width: min(82vw, 68vh, 720px);
+            aspect-ratio: 3 / 4;
+            min-height: 0;
+            overflow: hidden;
+            border: 1px solid rgba(244, 211, 107, .7);
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, rgba(255, 247, 207, .96), rgba(244, 211, 107, .94));
+            box-shadow:
+                0 34px 90px rgba(0, 0, 0, .54),
+                0 0 0 1px rgba(255, 250, 240, .2),
+                0 0 74px rgba(212, 175, 55, .28);
+            opacity: 0;
+            transform: translate(-50%, -10%) scale(.26) rotateX(8deg);
+            transform-origin: center bottom;
+            will-change: transform, opacity;
+        }
+
         .award-letter span {
             border-top: 1px solid rgba(17, 17, 17, .18);
             border-bottom: 1px solid rgba(17, 17, 17, .18);
@@ -290,7 +316,7 @@
             display: block;
             width: 100%;
             height: 100%;
-            object-fit: cover;
+            object-fit: contain;
             object-position: center;
         }
 
@@ -349,11 +375,15 @@
         }
 
         .award-slide.is-opening .award-envelope::before {
-            animation: envelopeFlapOpen 3.2s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: envelopeFlapOpen 4s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-slide.is-opening .award-letter {
-            animation: awardWinnerPhotoReveal 3.2s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: awardWinnerPhotoReveal 4s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .award-slide.is-opening .award-winner-photo-card {
+            animation: awardWinnerPosterReveal 4s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-slide.is-opening .nominee-result-gallery {
@@ -480,13 +510,17 @@
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
-            78% {
+            64% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
+            86% {
+                opacity: .18;
+                transform: translateY(14vh) scale(.86);
+            }
             100% {
                 opacity: 0;
-                transform: translateY(-22px) scale(.96);
+                transform: translateY(18vh) scale(.82);
             }
         }
 
@@ -519,6 +553,33 @@
             100% {
                 opacity: 1;
                 transform: translate(-50%, -54%) scale(1.08) rotateX(0deg);
+            }
+        }
+
+        @keyframes awardWinnerPosterReveal {
+            0%,
+            22% {
+                opacity: 0;
+                filter: brightness(.8) saturate(.9);
+                transform: translate(-50%, -10%) scale(.26) rotateX(8deg);
+            }
+            34% {
+                opacity: 1;
+                transform: translate(-50%, -30%) scale(.34) rotateX(0deg);
+            }
+            58% {
+                opacity: 1;
+                transform: translate(-50%, -64%) scale(.58) rotateX(0deg);
+            }
+            82% {
+                opacity: 1;
+                filter: brightness(1) saturate(1);
+                transform: translate(-50%, -50%) scale(1) rotateX(0deg);
+            }
+            100% {
+                opacity: 1;
+                filter: brightness(1) saturate(1);
+                transform: translate(-50%, -50%) scale(1) rotateX(0deg);
             }
         }
 
@@ -653,6 +714,14 @@
             .award-action-button {
                 width: 100%;
             }
+
+            .award-envelope-scene {
+                width: min(360px, 82vw);
+            }
+
+            .award-winner-photo-card {
+                width: min(88vw, 70vh);
+            }
         }
 
         @media (max-height: 680px) and (min-width: 761px) {
@@ -665,12 +734,12 @@
                 font-size: clamp(1.8rem, 4.8vw, 3.6rem);
             }
 
-            .envelope-panel {
-                inset: 10px;
+            .award-envelope-scene {
+                width: min(330px, 52vw);
             }
 
-            .award-envelope {
-                width: min(300px, 52vw);
+            .award-winner-photo-card {
+                width: min(62vw, 70vh, 560px);
             }
 
             .nominee-result-gallery {
@@ -733,21 +802,24 @@
                                 <div class="envelope-panel" aria-hidden="true">
                                     <div class="award-envelope-scene">
                                         <div class="award-envelope">
-                                            <div class="award-letter">
-                                                @if($winnerNominee)
-                                                    <div class="award-letter-photo">
-                                                        <img src="{{ $winnerNominee->image_url }}" alt="">
-                                                    </div>
-                                                    <div class="award-letter-info">
-                                                        <div class="award-letter-caption">Переможець</div>
-                                                        <div class="award-letter-name">{{ $winnerNominee->name }}</div>
-                                                    </div>
-                                                @else
+                                            @unless($winnerNominee)
+                                                <div class="award-letter">
                                                     <span>Переможець</span>
-                                                @endif
-                                            </div>
+                                                </div>
+                                            @endunless
                                         </div>
                                     </div>
+                                    @if($winnerNominee)
+                                        <div class="award-winner-photo-card">
+                                            <div class="award-letter-photo">
+                                                <img src="{{ $winnerNominee->image_url }}" alt="">
+                                            </div>
+                                            <div class="award-letter-info">
+                                                <div class="award-letter-caption">Переможець</div>
+                                                <div class="award-letter-name">{{ $winnerNominee->name }}</div>
+                                            </div>
+                                        </div>
+                                    @endif
                                 </div>
 
                                 <div class="nominee-result-gallery">
@@ -882,7 +954,7 @@
                         inline: 'center',
                     });
                     updateControls();
-                }, 3200);
+                }, 4000);
             });
 
             updateControls();
