@@ -312,8 +312,10 @@
         .nominee-result-gallery {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(clamp(168px, 16vw, 245px), 1fr));
-            grid-auto-rows: minmax(clamp(235px, 33vh, 365px), auto);
+            grid-auto-rows: clamp(310px, 52vh, 540px);
             gap: clamp(12px, 1.5vw, 18px);
+            align-content: start;
+            align-items: stretch;
             min-height: 0;
             overflow: auto;
             padding: 2px;
@@ -324,7 +326,7 @@
         .award-nominee {
             position: relative;
             display: grid;
-            grid-template-rows: minmax(135px, 1fr) auto;
+            grid-template-rows: minmax(0, 1fr) auto;
             min-height: 0;
             overflow: hidden;
             border: 1px solid rgba(244, 211, 107, .2);
@@ -351,7 +353,8 @@
             max-width: 100%;
             height: 100%;
             max-height: none;
-            object-fit: contain;
+            object-fit: cover;
+            object-position: center;
         }
 
         .award-nominee-body {
@@ -392,7 +395,7 @@
         }
 
         .winner-badge {
-            display: inline-flex;
+            display: none;
             min-height: 30px;
             align-items: center;
             justify-content: center;
@@ -463,16 +466,19 @@
             transform: translateY(0);
         }
 
+        .award-slide.is-revealed .winner-badge {
+            display: inline-flex;
+        }
+
         .award-slide.is-revealed .award-nominee.is-winner {
             border-color: rgba(244, 211, 107, .96);
             background:
                 linear-gradient(180deg, rgba(244, 211, 107, .12), rgba(255, 250, 240, .08)),
                 rgba(255, 250, 240, .1);
             box-shadow:
-                0 0 0 1px rgba(244, 211, 107, .34),
-                0 0 0 6px rgba(212, 175, 55, .08),
-                0 24px 62px rgba(212, 175, 55, .24);
-            transform: translateY(-4px);
+                inset 0 0 0 2px rgba(244, 211, 107, .72),
+                inset 0 0 0 8px rgba(212, 175, 55, .1);
+            transform: translateY(0);
         }
 
         .award-slide.is-revealed .award-nominee.is-winner::before {
@@ -577,7 +583,7 @@
 
             .nominee-result-gallery {
                 grid-template-columns: 1fr;
-                grid-auto-rows: minmax(300px, auto);
+                grid-auto-rows: clamp(320px, 64vh, 520px);
                 overflow: visible;
             }
 
@@ -606,11 +612,11 @@
             }
 
             .nominee-result-gallery {
-                grid-auto-rows: minmax(200px, auto);
+                grid-auto-rows: clamp(210px, 47vh, 340px);
             }
 
             .award-nominee {
-                grid-template-rows: minmax(105px, 1fr) auto;
+                grid-template-rows: minmax(0, 1fr) auto;
             }
 
             .award-nominee-body {
@@ -679,7 +685,9 @@
                                             </div>
                                             <div class="award-nominee-body">
                                                 <h3>{{ $nominee->name }}</h3>
-                                                <p class="award-score">{{ $nominee->oscar_score }} голосів</p>
+                                                @if($showScores)
+                                                    <p class="award-score">{{ $nominee->oscar_score }} голосів</p>
+                                                @endif
                                                 @if($isWinner)
                                                     <span class="winner-badge">Переможець</span>
                                                 @endif

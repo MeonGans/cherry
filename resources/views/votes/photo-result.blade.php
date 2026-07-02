@@ -284,12 +284,16 @@
                         @endphp
                         <article class="photo-result-card {{ $isWinner ? 'is-winner' : '' }}" data-score="{{ $photo->score }}">
                             <img src="{{ asset($photo->image_path) }}" alt="Фото учасника">
-                            <div class="photo-result-body">
-                                <span class="score">{{ $photo->score }} балів</span>
-                                @if($isWinner)
-                                    <span class="winner-label">Переможець</span>
-                                @endif
-                            </div>
+                            @if($showScores || $isWinner)
+                                <div class="photo-result-body">
+                                    @if($showScores)
+                                        <span class="score">{{ $photo->score }} балів</span>
+                                    @endif
+                                    @if($isWinner)
+                                        <span class="winner-label">Переможець</span>
+                                    @endif
+                                </div>
+                            @endif
                         </article>
                     @endforeach
                 </div>

@@ -15,6 +15,7 @@
             <div class="points-actions">
                 <a href="{{ route('votes.photosForm', $vote->vote_url) }}" class="btn btn-outline-info">Фото</a>
                 <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-primary">Результат</a>
+                <a href="{{ route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]) }}" class="btn btn-outline-warning">З балами</a>
             </div>
         </section>
 

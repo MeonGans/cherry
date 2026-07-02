@@ -196,13 +196,14 @@ class VoteController extends Controller
     public function result($voteUrl)
     {
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        $showScores = request()->boolean('scores');
 
         if ($vote->isPhotoVote()) {
-            return $this->photoResult($vote);
+            return $this->photoResult($vote, $showScores);
         }
 
         if ($vote->isOscarVote()) {
-            return $this->oscarResult($vote);
+            return $this->oscarResult($vote, $showScores);
         }
 
         $results = UserVote::where('vote_id', $vote->id)
@@ -238,7 +239,7 @@ class VoteController extends Controller
             ])
             ->values();
 
-        return view('votes.result', compact('vote', 'teams', 'maxVotes'));
+        return view('votes.result', compact('vote', 'teams', 'maxVotes', 'showScores'));
     }
 
     public function addPointsForm($voteUrl)
@@ -289,7 +290,7 @@ class VoteController extends Controller
             'points' => $data['points'],
         ]);
 
-        return redirect()->route('votes.result', $voteUrl);
+        return redirect()->route('votes.result', ['voteUrl' => $voteUrl, 'scores' => 1]);
     }
 
     public function photosForm($voteUrl)
@@ -385,7 +386,7 @@ class VoteController extends Controller
             'points' => $data['points'],
         ]);
 
-        return redirect()->route('votes.result', $vote->vote_url);
+        return redirect()->route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]);
     }
 
     private function addOscarPoints(Request $request, Vote $vote)
@@ -413,7 +414,7 @@ class VoteController extends Controller
             'points' => $data['points'],
         ]);
 
-        return redirect()->route('votes.result', $vote->vote_url);
+        return redirect()->route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]);
     }
 
     private function elementLogoPath(Team $team): string
@@ -442,7 +443,7 @@ class VoteController extends Controller
         return 1000 + $team->id;
     }
 
-    private function photoResult(Vote $vote)
+    private function photoResult(Vote $vote, bool $showScores = false)
     {
         $scores = PhotoVote::where('vote_id', $vote->id)
             ->selectRaw('vote_photo_id, SUM(points) as total')
@@ -461,7 +462,7 @@ class VoteController extends Controller
             ['id', 'asc'],
         ])->values();
 
-        return view('votes.photo-result', compact('vote', 'photos', 'maxVotes'));
+        return view('votes.photo-result', compact('vote', 'photos', 'maxVotes', 'showScores'));
     }
 
     private function submitOscarVote(Request $request, Vote $vote, User $user)
@@ -521,7 +522,7 @@ class VoteController extends Controller
         return redirect()->route('votes.success');
     }
 
-    private function oscarResult(Vote $vote)
+    private function oscarResult(Vote $vote, bool $showScores = false)
     {
         $scores = OscarVote::where('vote_id', $vote->id)
             ->selectRaw('nomination, nominee_user_id, SUM(points) as total')
@@ -553,7 +554,7 @@ class VoteController extends Controller
             ];
         }
 
-        return view('votes.oscar-result', compact('vote', 'results'));
+        return view('votes.oscar-result', compact('vote', 'results', 'showScores'));
     }
 
     private function oscarCandidatesByNomination(Vote $vote)

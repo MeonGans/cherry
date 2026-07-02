@@ -238,6 +238,10 @@
             padding: 10px;
         }
 
+        .team-meta--no-score {
+            grid-template-columns: clamp(48px, 4.2vw, 64px) minmax(0, 1fr);
+        }
+
         .team-mark {
             position: relative;
             display: grid;
@@ -584,7 +588,7 @@
                                 </div>
                             </div>
 
-                            <div class="team-meta">
+                            <div class="team-meta {{ $showScores ? '' : 'team-meta--no-score' }}">
                                 <div class="team-mark" data-fallback="{{ $fallback }}">
                                     <img
                                         src="{{ asset($team['logo']) }}"
@@ -598,10 +602,12 @@
                                     <h2>{{ $team['name'] }}</h2>
                                 </div>
 
-                                <div class="score-number" aria-label="{{ $team['count'] }} балів">
-                                    <span class="score-secret">?</span>
-                                    <span class="score-open">{{ $team['count'] }}</span>
-                                </div>
+                                @if($showScores)
+                                    <div class="score-number" aria-label="{{ $team['count'] }} балів">
+                                        <span class="score-secret">?</span>
+                                        <span class="score-open">{{ $team['count'] }}</span>
+                                    </div>
+                                @endif
                             </div>
                         </article>
                     @endforeach
