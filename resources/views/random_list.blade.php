@@ -70,9 +70,18 @@
                 Друк
             </button>
         </div>
+        <div class="mb-5 print-hidden">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук за ім'ям або командою"
+                data-table-search="#random-arrival-table"
+            >
+        </div>
+
         <div class="mb-5">
             <div class="table-responsive">
-                <table class="table-hover table">
+                <table id="random-arrival-table" class="table-hover table">
                     <thead>
                     <tr>
                         <th>#</th>

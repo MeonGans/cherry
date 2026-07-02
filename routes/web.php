@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminDashboardController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -33,6 +34,7 @@ use App\Http\Controllers\ZootopiaSafeController;
 
 Route::middleware(['admin.auth'])->group(function () {
 
+    Route::get('/admin', AdminDashboardController::class)->name('admin.dashboard');
     Route::get('/', [UserController::class, 'index'])->name('list');
     Route::get('/random_list', [UserController::class, 'random'])->name('random_list');
     Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');

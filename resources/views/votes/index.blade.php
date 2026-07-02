@@ -7,8 +7,17 @@
             <a href="{{ route('votes.create') }}" class="btn btn-primary">Створити</a>
         </div>
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук за назвою, типом або URL"
+                data-table-search="#votes-table"
+            >
+        </div>
+
         <div class="table-responsive">
-            <table>
+            <table id="votes-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -23,7 +32,7 @@
                 </thead>
                 <tbody>
                 @forelse($votes as $vote)
-                    <tr>
+                    <tr data-empty-row>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $vote->name }}</td>
                         <td>

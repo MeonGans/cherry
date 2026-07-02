@@ -84,9 +84,18 @@
         </div>
     @endif
 
+    <div class="mb-5 print-hidden">
+        <input
+            type="search"
+            class="form-input max-w-md"
+            placeholder="Пошук за ім'ям, командою або PIN"
+            data-table-search="#arrival-table"
+        >
+    </div>
+
     <div class="mb-5">
         <div class="table-responsive">
-            <table class="table-hover table">
+            <table id="arrival-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th class="print-hidden">#</th>

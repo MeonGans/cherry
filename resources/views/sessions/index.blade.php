@@ -26,8 +26,17 @@
             </div>
         @endif
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук за датою, статусом або кількістю учнів"
+                data-table-search="#sessions-table"
+            >
+        </div>
+
         <div class="table-responsive">
-            <table class="table-hover table">
+            <table id="sessions-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th class="w-20">#</th>
@@ -39,7 +48,7 @@
                 </thead>
                 <tbody>
                 @forelse($sessions as $session)
-                    <tr>
+                    <tr data-empty-row>
                         <td>{{ $session->id }}</td>
                         <td>
                             <div class="font-semibold text-black dark:text-white">

@@ -68,8 +68,17 @@
             </div>
         </form>
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук учня, команди або PIN"
+                data-table-search="#session-users-table"
+            >
+        </div>
+
         <div class="table-responsive">
-            <table class="table-hover table">
+            <table id="session-users-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th>#</th>
@@ -105,7 +114,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr data-empty-row>
                         <td colspan="7" class="text-center text-white-dark">У цій сесії ще немає учнів.</td>
                     </tr>
                 @endforelse

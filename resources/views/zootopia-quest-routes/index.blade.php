@@ -29,8 +29,17 @@
             </div>
         @endif
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук маршруту, коду або підказки"
+                data-table-search="#zootopia-routes-table"
+            >
+        </div>
+
         <div class="table-responsive">
-            <table class="table-hover table">
+            <table id="zootopia-routes-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th class="w-20">#</th>
@@ -43,7 +52,7 @@
                 </thead>
                 <tbody>
                 @forelse($questRoutes as $questRoute)
-                    <tr>
+                    <tr data-empty-row>
                         <td>{{ $questRoute->id }}</td>
                         <td>
                             <div class="font-semibold text-black dark:text-white">{{ $questRoute->name }}</div>

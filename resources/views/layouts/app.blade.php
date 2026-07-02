@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr">
+<html lang="uk" dir="ltr">
 <head>
     <meta charset="utf-8"/>
     <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
-    <title>CHERRY CAMP</title>
+    <title>@yield('title', 'CHERRY CAMP')</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.png')  }}"/>
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico')  }}"/>
     <link rel="preconnect" href="https://fonts.googleapis.com"/>
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
     <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&display=swap"
@@ -19,21 +19,17 @@
     <script defer src="{{ asset('assets/js/tippy-bundle.umd.min.js')  }}"></script>
     <script defer src="{{ asset('assets/js/sweetalert.min.js')  }}"></script>
     <link rel="stylesheet" href="{{ asset('assets/css/nice-select2.css')  }}" />
+    @stack('styles')
 </head>
 
 
 
 <body
     x-data="main"
-    class="relative overflow-x-hidden font-nunito text-sm font-normal antialiased vertical boxed-layout ltr"
+    class="relative overflow-x-hidden font-nunito text-sm font-normal antialiased vertical ltr"
     :class="[ $store.app.sidebar ? 'toggle-sidebar' : '', $store.app.theme === 'dark' || $store.app.isDarkMode ?  'dark' : '', $store.app.menu, $store.app.layout,$store.app.rtlClass]"
 >
 
-{{--<body--}}
-{{--    x-data="main"--}}
-{{--    class="relative overflow-x-hidden font-nunito text-sm font-normal antialiased"--}}
-{{--    :class="[ $store.app.sidebar ? 'toggle-sidebar' : '', $store.app.theme === 'dark' || $store.app.isDarkMode ?  'dark' : '', $store.app.menu, $store.app.layout,$store.app.rtlClass]"--}}
-{{-->--}}
 <!-- sidebar menu overlay -->
 <div x-cloak class="fixed inset-0 z-50 bg-[black]/60 lg:hidden" :class="{'hidden' : !$store.app.sidebar}"
      @click="$store.app.toggleSidebar()"></div>
@@ -93,7 +89,7 @@
             <div class="shadow-sm">
                 <div class="relative flex w-full items-center bg-white px-5 py-2.5 dark:bg-[#0e1726]">
                     <div class="horizontal-logo flex items-center justify-between ltr:mr-2 rtl:ml-2 lg:hidden">
-                        <a href="index.html" class="main-logo flex shrink-0 items-center">
+                        <a href="{{ route('admin.dashboard') }}" class="main-logo flex shrink-0 items-center">
                             <img class="inline w-8 ltr:-ml-1 rtl:-mr-1" src="{{ asset('assets/images/logo.png') }}" alt="image"/>
                             <span
                                 class="hidden align-middle text-2xl font-semibold transition-all duration-300 ltr:ml-1.5 rtl:mr-1.5 dark:text-white-light md:inline"
@@ -119,16 +115,17 @@
                         x-data="header"
                         class="flex items-center space-x-1.5 ltr:ml-auto rtl:mr-auto rtl:space-x-reverse dark:text-[#d0d2d6] sm:flex-1 ltr:sm:ml-0 sm:rtl:mr-0 lg:space-x-2"
                     >
-                        <div class="sm:ltr:mr-auto sm:rtl:ml-auto" x-data="{ search: false }"
-                             @click.outside="search = false">
-
+                        <div class="min-w-0 sm:ltr:mr-auto sm:rtl:ml-auto">
+                            <div class="text-xs font-semibold uppercase text-white-dark">Адмін-панель</div>
+                            <div class="truncate text-base font-bold text-black dark:text-white">
+                                @yield('page-title', 'Панель керування')
+                            </div>
                         </div>
-                        <div>
+                        <div class="flex items-center gap-2">
                             <a
                                 href="javascript:;"
                                 x-cloak
                                 x-show="$store.app.theme === 'light'"
-                                href="javascript:;"
                                 class="flex items-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:hover:bg-dark/60"
                                 @click="$store.app.toggleTheme('dark')"
                             >
@@ -176,7 +173,6 @@
                                 href="javascript:;"
                                 x-cloak
                                 x-show="$store.app.theme === 'dark'"
-                                href="javascript:;"
                                 class="flex items-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:hover:bg-dark/60"
                                 @click="$store.app.toggleTheme('system')"
                             >
@@ -192,7 +188,6 @@
                                 href="javascript:;"
                                 x-cloak
                                 x-show="$store.app.theme === 'system'"
-                                href="javascript:;"
                                 class="flex items-center rounded-full bg-white-light/40 p-2 hover:bg-white-light/90 hover:text-primary dark:bg-dark/40 dark:hover:bg-dark/60"
                                 @click="$store.app.toggleTheme('light')"
                             >
@@ -209,6 +204,10 @@
                                           stroke-linecap="round"/>
                                 </svg>
                             </a>
+                            <form action="{{ route('admin.logout') }}" method="POST" class="hidden sm:block">
+                                @csrf
+                                <button type="submit" class="btn btn-outline-danger btn-sm">Вийти</button>
+                            </form>
                         </div>
                     </div>
                 </div>
@@ -240,6 +239,7 @@
 <script defer src="{{ asset('assets/js/apexcharts.js') }}"></script>
 <script src="{{ asset('assets/js/simple-datatables.js') }}"></script>
 <script src="{{ asset('assets/js/nice-select2.js') }}"></script>
+@stack('scripts')
 
 <script>
     document.addEventListener("DOMContentLoaded", function(e) {
@@ -247,6 +247,33 @@
         var els = document.querySelectorAll(".selectize");
         els.forEach(function(select) {
             NiceSelect.bind(select);
+        });
+    });
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        document.querySelectorAll('[data-table-search]').forEach(function (input) {
+            var selector = input.getAttribute('data-table-search');
+            var tables = Array.from(document.querySelectorAll(selector));
+
+            if (!tables.length) {
+                return;
+            }
+
+            input.addEventListener('input', function () {
+                var term = input.value.trim().toLowerCase();
+
+                tables.forEach(function (table) {
+                    table.querySelectorAll('tbody tr').forEach(function (row) {
+                        if (row.hasAttribute('data-empty-row')) {
+                            return;
+                        }
+
+                        var matches = row.textContent.toLowerCase().includes(term);
+                        row.classList.toggle('hidden', !matches);
+                    });
+                });
+            });
         });
     });
 </script>

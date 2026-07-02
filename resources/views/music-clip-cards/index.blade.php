@@ -55,6 +55,15 @@
             ];
         @endphp
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук картки кліпу"
+                data-table-search=".clip-card-table"
+            >
+        </div>
+
         <div class="grid gap-6">
             @foreach($groups as $group)
                 <section class="rounded border border-white-light p-4 dark:border-[#1b2e4b]">
@@ -74,7 +83,7 @@
                     </div>
 
                     <div class="table-responsive">
-                        <table class="table-hover table">
+                        <table class="clip-card-table table-hover table">
                             <thead>
                             <tr>
                                 <th class="w-20">#</th>
@@ -85,7 +94,7 @@
                             </thead>
                             <tbody>
                             @forelse($group['cards'] as $card)
-                                <tr>
+                                <tr data-empty-row>
                                     <td>{{ $card->id }}</td>
                                     <td>
                                         <div class="flex items-center gap-3">

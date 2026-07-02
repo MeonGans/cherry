@@ -22,15 +22,15 @@ class AdminAuthController extends Controller
 
         if ($request->input('pin') === $this->adminPin) {
             Session::put('admin_logged_in', true);
-            return redirect()->route('products.index')->with('success', 'Logged in as admin.');
+            return redirect()->route('admin.dashboard')->with('success', 'Ви увійшли в адмін-панель.');
         }
 
-        return back()->withErrors(['pin' => 'Invalid PIN code.']);
+        return back()->withErrors(['pin' => 'Неправильний PIN-код.']);
     }
 
     public function logout()
     {
         Session::forget('admin_logged_in');
-        return redirect()->route('admin.login')->with('success', 'Logged out successfully.');
+        return redirect()->route('admin.login')->with('success', 'Ви вийшли з адмін-панелі.');
     }
 }

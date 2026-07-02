@@ -33,8 +33,17 @@
             </form>
         @endforeach
 
+        <div class="mb-5">
+            <input
+                type="search"
+                class="form-input max-w-md"
+                placeholder="Пошук товару"
+                data-table-search="#products-table"
+            >
+        </div>
+
         <div class="table-responsive">
-            <table class="table-hover table">
+            <table id="products-table" class="table-hover table">
                 <thead>
                 <tr>
                     <th class="w-20">#</th>
@@ -46,7 +55,7 @@
                 </thead>
                 <tbody>
                 @forelse($products as $product)
-                    <tr>
+                    <tr data-empty-row>
                         <td>{{ $product->id }}</td>
                         <td>
                             <div class="flex items-center gap-3">
