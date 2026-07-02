@@ -47,11 +47,15 @@
             --oscar-gold-soft: #f4d36b;
             --oscar-ink: #fffaf0;
             --oscar-muted: rgba(255, 250, 240, .68);
+            position: fixed;
+            inset: 0;
+            z-index: 70;
             display: grid;
             grid-template-rows: auto minmax(0, 1fr) auto;
             gap: 18px;
-            width: 100vw;
-            height: 100svh;
+            width: auto;
+            height: auto;
+            min-width: 0;
             overflow: hidden;
             background:
                 linear-gradient(180deg, rgba(244, 211, 107, .1), transparent 34%),
@@ -192,24 +196,75 @@
             border-radius: 8px;
             background:
                 radial-gradient(circle at center, rgba(212, 175, 55, .2), transparent 42%),
-                rgba(13, 11, 8, .74);
+                rgba(13, 11, 8, .5);
             backdrop-filter: blur(2px);
+            opacity: 0;
             perspective: 900px;
+            pointer-events: none;
+            transform: scale(.98);
             transition: opacity .45s ease, transform .45s ease, visibility .45s ease;
+            visibility: hidden;
+        }
+
+        .award-slide.is-opening .envelope-panel {
+            opacity: 1;
+            transform: scale(1);
+            visibility: visible;
+        }
+
+        .award-envelope-scene {
+            position: relative;
+            width: min(420px, 74vw);
+            aspect-ratio: 1.65 / 1;
+            filter: drop-shadow(0 26px 42px rgba(0, 0, 0, .38));
+            transform: translateY(10px) scale(.94);
+            transition: transform .4s ease;
+        }
+
+        .award-slide.is-opening .award-envelope-scene {
+            animation: envelopeSceneArrive 2.2s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-envelope {
             position: relative;
-            width: min(420px, 74vw);
-            aspect-ratio: 1.65 / 1;
+            width: 100%;
+            height: 100%;
             border: 1px solid rgba(244, 211, 107, .66);
             border-radius: 8px;
             background:
                 linear-gradient(145deg, #f8e7aa, #c99f2c);
-            box-shadow: 0 22px 60px rgba(0, 0, 0, .32), 0 0 38px rgba(212, 175, 55, .16);
+            box-shadow: 0 0 42px rgba(212, 175, 55, .2);
             transform-origin: top center;
             transform-style: preserve-3d;
             transition: transform .65s ease, opacity .45s ease;
+        }
+
+        .award-letter {
+            position: absolute;
+            right: 9%;
+            bottom: 11%;
+            left: 9%;
+            z-index: 1;
+            display: grid;
+            height: 70%;
+            place-items: center;
+            border: 1px solid rgba(151, 104, 12, .26);
+            border-radius: 8px;
+            background:
+                linear-gradient(180deg, #fff7cf, #f4d36b);
+            color: #111111;
+            font-size: clamp(1.2rem, 3vw, 2.2rem);
+            font-weight: 900;
+            letter-spacing: 0;
+            text-transform: uppercase;
+            transform: translateY(42%) scale(.94);
+            transition: transform .9s cubic-bezier(.16, 1, .3, 1), opacity .45s ease;
+        }
+
+        .award-letter span {
+            border-top: 1px solid rgba(17, 17, 17, .18);
+            border-bottom: 1px solid rgba(17, 17, 17, .18);
+            padding: 8px 18px;
         }
 
         .award-envelope::before,
@@ -221,6 +276,7 @@
         }
 
         .award-envelope::before {
+            z-index: 4;
             clip-path: polygon(0 0, 50% 54%, 100% 0);
             background: linear-gradient(180deg, #fff2bc, #d8ae35);
             backface-visibility: hidden;
@@ -229,13 +285,21 @@
         }
 
         .award-envelope::after {
+            z-index: 3;
             clip-path: polygon(0 100%, 50% 45%, 100% 100%);
             background: linear-gradient(180deg, rgba(151, 104, 12, .08), rgba(117, 78, 8, .28));
         }
 
-        .award-slide.is-opening .award-envelope::before,
-        .award-slide.is-revealed .award-envelope::before {
-            transform: rotateX(178deg);
+        .award-slide.is-opening .award-envelope::before {
+            animation: envelopeFlapOpen 2.2s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .award-slide.is-opening .award-letter {
+            animation: awardLetterReveal 2.2s cubic-bezier(.16, 1, .3, 1) forwards;
+        }
+
+        .award-slide.is-opening .nominee-result-gallery {
+            filter: brightness(.72) saturate(.86);
         }
 
         .award-slide.is-revealed .envelope-panel {
@@ -254,6 +318,7 @@
             overflow: auto;
             padding: 2px;
             scrollbar-color: rgba(244, 211, 107, .58) rgba(255, 250, 240, .08);
+            transition: filter .45s ease;
         }
 
         .award-nominee {
@@ -265,9 +330,9 @@
             border: 1px solid rgba(244, 211, 107, .2);
             border-radius: 8px;
             background: rgba(255, 250, 240, .08);
-            filter: saturate(.7);
-            opacity: .46;
-            transform: translateY(10px);
+            filter: saturate(.92);
+            opacity: .92;
+            transform: translateY(0);
             transition: opacity .45s ease, filter .45s ease, transform .45s ease, border-color .45s ease, box-shadow .45s ease, background .45s ease;
         }
 
@@ -343,6 +408,53 @@
             opacity: 1;
             filter: saturate(1);
             transform: translateY(0);
+        }
+
+        @keyframes envelopeSceneArrive {
+            0% {
+                opacity: 0;
+                transform: translateY(18px) scale(.9);
+            }
+            16% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            78% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-22px) scale(.96);
+            }
+        }
+
+        @keyframes envelopeFlapOpen {
+            0%,
+            24% {
+                transform: rotateX(0deg);
+            }
+            52%,
+            100% {
+                transform: rotateX(178deg);
+            }
+        }
+
+        @keyframes awardLetterReveal {
+            0%,
+            38% {
+                opacity: 0;
+                transform: translateY(42%) scale(.94);
+            }
+            62% {
+                opacity: 1;
+                transform: translateY(-36%) scale(1);
+            }
+            82%,
+            100% {
+                opacity: 1;
+                transform: translateY(-30%) scale(1);
+            }
         }
 
         .award-slide.is-revealed .award-score,
@@ -547,7 +659,13 @@
                         <div class="award-slide-body">
                             @if($hasNominees)
                                 <div class="envelope-panel" aria-hidden="true">
-                                    <div class="award-envelope"></div>
+                                    <div class="award-envelope-scene">
+                                        <div class="award-envelope">
+                                            <div class="award-letter">
+                                                <span>Переможець</span>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <div class="nominee-result-gallery">
@@ -680,7 +798,7 @@
                         inline: 'center',
                     });
                     updateControls();
-                }, 1250);
+                }, 2200);
             });
 
             updateControls();
