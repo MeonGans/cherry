@@ -17,8 +17,20 @@
             background: #0d0b08;
         }
 
+        body:has(.oscar-results-stage) .main-container,
+        body:has(.oscar-results-stage) .main-container .main-content {
+            width: 100vw !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+        }
+
         body:has(.oscar-results-stage) .dvanimation,
         body:has(.oscar-results-stage) [x-data="basic"] {
+            width: 100vw;
             min-height: 100svh;
             padding: 0 !important;
         }
@@ -38,7 +50,7 @@
             display: grid;
             grid-template-rows: auto minmax(0, 1fr) auto;
             gap: 18px;
-            width: 100%;
+            width: 100vw;
             height: 100svh;
             overflow: hidden;
             background:
@@ -162,26 +174,33 @@
         .award-slide-body {
             position: relative;
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto;
-            gap: 16px;
+            grid-template-rows: minmax(0, 1fr);
             min-height: 0;
             overflow: hidden;
             border: 1px solid var(--oscar-line);
             border-radius: 8px;
             background: var(--oscar-panel);
-            padding: clamp(14px, 2vw, 22px);
+            padding: clamp(12px, 1.6vw, 20px);
         }
 
         .envelope-panel {
+            position: absolute;
+            inset: clamp(12px, 1.6vw, 20px);
+            z-index: 8;
             display: grid;
             place-items: center;
-            min-height: 112px;
-            transition: opacity .45s ease, transform .45s ease;
+            border-radius: 8px;
+            background:
+                radial-gradient(circle at center, rgba(212, 175, 55, .2), transparent 42%),
+                rgba(13, 11, 8, .74);
+            backdrop-filter: blur(2px);
+            perspective: 900px;
+            transition: opacity .45s ease, transform .45s ease, visibility .45s ease;
         }
 
         .award-envelope {
             position: relative;
-            width: min(360px, 72vw);
+            width: min(420px, 74vw);
             aspect-ratio: 1.65 / 1;
             border: 1px solid rgba(244, 211, 107, .66);
             border-radius: 8px;
@@ -189,6 +208,7 @@
                 linear-gradient(145deg, #f8e7aa, #c99f2c);
             box-shadow: 0 22px 60px rgba(0, 0, 0, .32), 0 0 38px rgba(212, 175, 55, .16);
             transform-origin: top center;
+            transform-style: preserve-3d;
             transition: transform .65s ease, opacity .45s ease;
         }
 
@@ -203,6 +223,7 @@
         .award-envelope::before {
             clip-path: polygon(0 0, 50% 54%, 100% 0);
             background: linear-gradient(180deg, #fff2bc, #d8ae35);
+            backface-visibility: hidden;
             transform-origin: top center;
             transition: transform .65s ease;
         }
@@ -219,23 +240,26 @@
 
         .award-slide.is-revealed .envelope-panel {
             opacity: 0;
+            visibility: hidden;
             pointer-events: none;
             transform: translateY(-14px);
         }
 
         .nominee-result-gallery {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(clamp(168px, 16vw, 245px), 1fr));
+            grid-auto-rows: minmax(clamp(235px, 33vh, 365px), auto);
             gap: clamp(12px, 1.5vw, 18px);
             min-height: 0;
             overflow: auto;
             padding: 2px;
+            scrollbar-color: rgba(244, 211, 107, .58) rgba(255, 250, 240, .08);
         }
 
         .award-nominee {
             position: relative;
             display: grid;
-            grid-template-rows: minmax(0, 1fr) auto;
+            grid-template-rows: minmax(135px, 1fr) auto;
             min-height: 0;
             overflow: hidden;
             border: 1px solid rgba(244, 211, 107, .2);
@@ -244,40 +268,48 @@
             filter: saturate(.7);
             opacity: .46;
             transform: translateY(10px);
-            transition: opacity .45s ease, filter .45s ease, transform .45s ease, border-color .45s ease, box-shadow .45s ease;
+            transition: opacity .45s ease, filter .45s ease, transform .45s ease, border-color .45s ease, box-shadow .45s ease, background .45s ease;
         }
 
         .award-nominee-image {
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 220px;
+            min-height: 0;
             overflow: hidden;
             background: rgba(0, 0, 0, .28);
         }
 
         .award-nominee-image img {
             display: block;
-            width: auto;
+            width: 100%;
             max-width: 100%;
-            height: auto;
-            max-height: min(43vh, 430px);
+            height: 100%;
+            max-height: none;
             object-fit: contain;
         }
 
         .award-nominee-body {
             display: grid;
-            gap: 7px;
-            padding: 12px;
+            gap: 6px;
+            min-height: 92px;
+            align-content: center;
+            padding: 10px 12px 12px;
             text-align: center;
         }
 
         .award-nominee-body h3 {
+            display: -webkit-box;
             margin: 0;
+            overflow: hidden;
             color: #ffffff;
-            font-size: clamp(1rem, 1.35vw, 1.35rem);
+            font-size: clamp(.96rem, 1.22vw, 1.24rem);
             font-weight: 900;
-            line-height: 1.12;
+            line-height: 1.08;
+            overflow-wrap: anywhere;
+            text-wrap: balance;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
         }
 
         .award-score,
@@ -290,7 +322,7 @@
         .award-score {
             margin: 0;
             color: var(--oscar-gold-soft);
-            font-size: 1rem;
+            font-size: clamp(.86rem, 1vw, 1rem);
             font-weight: 900;
         }
 
@@ -320,9 +352,31 @@
         }
 
         .award-slide.is-revealed .award-nominee.is-winner {
-            border-color: rgba(244, 211, 107, .9);
-            box-shadow: 0 20px 56px rgba(212, 175, 55, .22);
-            transform: translateY(-5px);
+            border-color: rgba(244, 211, 107, .96);
+            background:
+                linear-gradient(180deg, rgba(244, 211, 107, .12), rgba(255, 250, 240, .08)),
+                rgba(255, 250, 240, .1);
+            box-shadow:
+                0 0 0 1px rgba(244, 211, 107, .34),
+                0 0 0 6px rgba(212, 175, 55, .08),
+                0 24px 62px rgba(212, 175, 55, .24);
+            transform: translateY(-4px);
+        }
+
+        .award-slide.is-revealed .award-nominee.is-winner::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            z-index: 1;
+            border: 1px solid rgba(255, 250, 240, .24);
+            border-radius: 6px;
+            pointer-events: none;
+        }
+
+        .award-slide.is-revealed .award-nominee.is-winner .award-nominee-body {
+            background:
+                linear-gradient(180deg, rgba(212, 175, 55, .14), rgba(0, 0, 0, .08)),
+                rgba(0, 0, 0, .18);
         }
 
         .empty-award {
@@ -411,6 +465,7 @@
 
             .nominee-result-gallery {
                 grid-template-columns: 1fr;
+                grid-auto-rows: minmax(300px, auto);
                 overflow: visible;
             }
 
@@ -431,19 +486,24 @@
             }
 
             .envelope-panel {
-                min-height: 74px;
+                inset: 10px;
             }
 
             .award-envelope {
-                width: min(260px, 48vw);
+                width: min(300px, 52vw);
             }
 
-            .award-nominee-image {
-                min-height: 160px;
+            .nominee-result-gallery {
+                grid-auto-rows: minmax(200px, auto);
             }
 
-            .award-nominee-image img {
-                max-height: min(34vh, 300px);
+            .award-nominee {
+                grid-template-rows: minmax(105px, 1fr) auto;
+            }
+
+            .award-nominee-body {
+                min-height: 78px;
+                padding: 8px 10px 10px;
             }
         }
     </style>

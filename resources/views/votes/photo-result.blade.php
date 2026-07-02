@@ -6,8 +6,20 @@
             background: #0d0b08;
         }
 
+        body:has(.photo-awards-stage) .main-container,
+        body:has(.photo-awards-stage) .main-container .main-content {
+            width: 100vw !important;
+            max-width: none !important;
+            min-width: 0 !important;
+            margin-right: 0 !important;
+            margin-left: 0 !important;
+            padding-right: 0 !important;
+            padding-left: 0 !important;
+        }
+
         body:has(.photo-awards-stage) .dvanimation,
         body:has(.photo-awards-stage) [x-data="basic"] {
+            width: 100vw;
             min-height: 100svh;
             padding: 0 !important;
         }
@@ -24,6 +36,9 @@
             --photo-gold-soft: #f4d36b;
             --photo-ink: #fffaf0;
             --photo-muted: rgba(255, 250, 240, .68);
+            display: grid;
+            place-items: start center;
+            width: 100vw;
             min-height: 100svh;
             background:
                 linear-gradient(180deg, rgba(244, 211, 107, .1), transparent 30%),
