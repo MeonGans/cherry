@@ -103,7 +103,7 @@ class VoteController extends Controller
         $user = User::where('pin_code', $data['pin_code'])->first();
 
         if (!$user) {
-            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Invalid PIN code.']);
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Невірний PIN-код.']);
         }
 
         return redirect()->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $user->id]);
@@ -134,11 +134,15 @@ class VoteController extends Controller
             return view('votes.oscar-vote', compact('vote', 'user', 'nominations', 'candidatesByNomination', 'alreadyVoted'));
         }
 
-        $teams = Team::where('id', '!=', $user->team_id)
+        $teams = Team::with('element')
+            ->where('id', '!=', $user->team_id)
             ->where('id', '!=', 10)
             ->get();
+        $alreadyVoted = UserVote::where('vote_id', $vote->id)
+            ->where('user_id', $user->id)
+            ->exists();
 
-        return view('votes.vote', compact('vote', 'user', 'teams'));
+        return view('votes.vote', compact('vote', 'user', 'teams', 'alreadyVoted'));
     }
 
     public function submitVote(Request $request, $voteUrl, $userId)
@@ -165,13 +169,13 @@ class VoteController extends Controller
         if ($existingVote) {
             return redirect()
                 ->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $userId])
-                ->withErrors(['message' => 'You have already voted.']);
+                ->withErrors(['message' => 'Ви вже проголосували.']);
         }
 
         if ((int) $user->team_id === (int) $data['team_id']) {
             return redirect()
                 ->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $userId])
-                ->withErrors(['message' => 'You cannot vote for your own team.']);
+                ->withErrors(['message' => 'Не можна голосувати за власну команду.']);
         }
 
         UserVote::create([
@@ -414,23 +418,7 @@ class VoteController extends Controller
 
     private function elementLogoPath(Team $team): string
     {
-        $name = mb_strtolower(trim(($team->element?->name ?? '') . ' ' . $team->name));
-
-        $logos = [
-            'вогонь' => 'assets/images/elements/1.png',
-            'повітря' => 'assets/images/elements/2.png',
-            'вода' => 'assets/images/elements/3.png',
-            'земля' => 'assets/images/elements/4.png',
-            'метал' => 'assets/images/elements/5.png',
-        ];
-
-        foreach ($logos as $needle => $path) {
-            if (str_contains($name, $needle)) {
-                return $path;
-            }
-        }
-
-        return 'assets/images/elements/' . ($team->element_id ?: 1) . '.png';
+        return $team->element_logo_path;
     }
 
     private function teamRevealOrder(Team $team): int
