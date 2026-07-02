@@ -677,7 +677,7 @@
                                 <div class="nominee-result-gallery">
                                     @foreach($result['nominees'] as $nominee)
                                         @php
-                                            $isWinner = in_array((int) $nominee->id, $result['winnerIds'], true);
+                                            $isWinner = (bool) $nominee->is_oscar_winner;
                                         @endphp
                                         <article class="award-nominee {{ $isWinner ? 'is-winner' : '' }}">
                                             <div class="award-nominee-image">
