@@ -223,7 +223,7 @@
         }
 
         .award-slide.is-opening .award-envelope-scene {
-            animation: envelopeSceneArrive 4s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: envelopeSceneArrive 5.2s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-envelope {
@@ -269,11 +269,11 @@
             position: absolute;
             top: 50%;
             left: 50%;
-            z-index: 3;
+            z-index: 2;
             display: grid;
             grid-template-rows: minmax(0, 1fr) auto;
-            width: min(82vw, 68vh, 720px);
-            aspect-ratio: 3 / 4;
+            width: min(92vw, 1120px);
+            height: min(86vh, 800px);
             min-height: 0;
             overflow: hidden;
             border: 1px solid rgba(244, 211, 107, .7);
@@ -285,7 +285,7 @@
                 0 0 0 1px rgba(255, 250, 240, .2),
                 0 0 74px rgba(212, 175, 55, .28);
             opacity: 0;
-            transform: translate(-50%, -10%) scale(.26) rotateX(8deg);
+            transform: translate(-50%, -8%) scale(.16) rotateX(10deg);
             transform-origin: center bottom;
             will-change: transform, opacity;
         }
@@ -375,15 +375,15 @@
         }
 
         .award-slide.is-opening .award-envelope::before {
-            animation: envelopeFlapOpen 4s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: envelopeFlapOpen 5.2s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-slide.is-opening .award-letter {
-            animation: awardWinnerPhotoReveal 4s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: awardWinnerPhotoReveal 5.2s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-slide.is-opening .award-winner-photo-card {
-            animation: awardWinnerPosterReveal 4s cubic-bezier(.16, 1, .3, 1) forwards;
+            animation: awardWinnerPosterReveal 5.2s cubic-bezier(.16, 1, .3, 1) forwards;
         }
 
         .award-slide.is-opening .nominee-result-gallery {
@@ -506,16 +506,16 @@
                 opacity: 0;
                 transform: translateY(18px) scale(.9);
             }
-            16% {
+            8% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
-            64% {
+            46% {
                 opacity: 1;
                 transform: translateY(0) scale(1);
             }
-            86% {
-                opacity: .18;
+            58% {
+                opacity: 0;
                 transform: translateY(14vh) scale(.86);
             }
             100% {
@@ -526,10 +526,10 @@
 
         @keyframes envelopeFlapOpen {
             0%,
-            18% {
+            14% {
                 transform: rotateX(0deg);
             }
-            44%,
+            34%,
             100% {
                 transform: rotateX(178deg);
             }
@@ -558,25 +558,35 @@
 
         @keyframes awardWinnerPosterReveal {
             0%,
-            22% {
+            24% {
+                z-index: 2;
                 opacity: 0;
                 filter: brightness(.8) saturate(.9);
-                transform: translate(-50%, -10%) scale(.26) rotateX(8deg);
+                transform: translate(-50%, -8%) scale(.16) rotateX(10deg);
             }
             34% {
+                z-index: 2;
                 opacity: 1;
-                transform: translate(-50%, -30%) scale(.34) rotateX(0deg);
+                transform: translate(-50%, -30%) scale(.2) rotateX(0deg);
             }
-            58% {
+            48% {
+                z-index: 2;
                 opacity: 1;
-                transform: translate(-50%, -64%) scale(.58) rotateX(0deg);
+                transform: translate(-50%, -78%) scale(.28) rotateX(0deg);
             }
-            82% {
+            56% {
+                z-index: 7;
+                opacity: 1;
+                transform: translate(-50%, -64%) scale(.36) rotateX(0deg);
+            }
+            78% {
+                z-index: 7;
                 opacity: 1;
                 filter: brightness(1) saturate(1);
                 transform: translate(-50%, -50%) scale(1) rotateX(0deg);
             }
             100% {
+                z-index: 7;
                 opacity: 1;
                 filter: brightness(1) saturate(1);
                 transform: translate(-50%, -50%) scale(1) rotateX(0deg);
@@ -720,7 +730,8 @@
             }
 
             .award-winner-photo-card {
-                width: min(88vw, 70vh);
+                width: min(92vw, 760px);
+                height: min(82vh, 720px);
             }
         }
 
@@ -739,7 +750,8 @@
             }
 
             .award-winner-photo-card {
-                width: min(62vw, 70vh, 560px);
+                width: min(76vw, 880px);
+                height: min(82vh, 620px);
             }
 
             .nominee-result-gallery {
@@ -942,7 +954,7 @@
 
                 actionButton.disabled = true;
                 actionButton.textContent = 'Відкриваємо...';
-                setStatus(title + ': дістаємо фото переможця');
+                setStatus(title + ': відкриваємо конверт');
                 slide.classList.add('is-opening');
 
                 window.setTimeout(() => {
@@ -954,7 +966,7 @@
                         inline: 'center',
                     });
                     updateControls();
-                }, 4000);
+                }, 5200);
             });
 
             updateControls();
