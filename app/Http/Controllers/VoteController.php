@@ -524,26 +524,35 @@ class VoteController extends Controller
 
     private function oscarResult(Vote $vote, bool $showScores = false)
     {
-        $scores = OscarVote::where('vote_id', $vote->id)
-            ->selectRaw('nomination, nominee_user_id, SUM(points) as total')
-            ->groupBy('nomination', 'nominee_user_id')
-            ->get()
-            ->groupBy('nomination');
-
-        $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
         $results = collect();
 
         foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
-            $scoreMap = ($scores[$key] ?? collect())->pluck('total', 'nominee_user_id');
-            $nominees = $candidatesByNomination[$key]
-                ->filter(fn (User $candidate) => (int) ($scoreMap[$candidate->id] ?? 0) > 0)
-                ->map(function (User $candidate) use ($scoreMap) {
-                    $candidate->oscar_score = (int) ($scoreMap[$candidate->id] ?? 0);
+            $scoreTotals = OscarVote::query()
+                ->where('vote_id', $vote->id)
+                ->where('nomination', $key)
+                ->selectRaw('nominee_user_id, SUM(points) as total')
+                ->groupBy('nominee_user_id');
+
+            $nominees = User::query()
+                ->join('oscar_nominees', 'oscar_nominees.user_id', '=', 'users.id')
+                ->leftJoinSub($scoreTotals, 'score_totals', function ($join) {
+                    $join->on('score_totals.nominee_user_id', '=', 'users.id');
+                })
+                ->where('oscar_nominees.vote_id', $vote->id)
+                ->where('oscar_nominees.nomination', $key)
+                ->select('users.*')
+                ->selectRaw('COALESCE(score_totals.total, 0) as oscar_score')
+                ->get()
+                ->map(function (User $candidate) {
+                    $candidate->oscar_score = (int) $candidate->oscar_score;
 
                     return $candidate;
                 })
-                ->sortBy('name')
-                ->sortBy('oscar_score')
+                ->filter(fn (User $candidate) => $candidate->oscar_score > 0)
+                ->sortBy([
+                    ['oscar_score', 'asc'],
+                    ['name', 'asc'],
+                ])
                 ->values();
 
             $winnerScore = $nominees->reduce(
