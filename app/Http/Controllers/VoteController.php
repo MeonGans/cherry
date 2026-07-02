@@ -546,11 +546,22 @@ class VoteController extends Controller
                 ->sortBy('oscar_score')
                 ->values();
 
+            $winnerScore = (int) ($nominees->max(fn (User $candidate) => (int) $candidate->oscar_score) ?? 0);
+            $winnerIds = $winnerScore > 0
+                ? $nominees
+                    ->filter(fn (User $candidate) => (int) $candidate->oscar_score === $winnerScore)
+                    ->pluck('id')
+                    ->map(fn ($id) => (int) $id)
+                    ->values()
+                    ->all()
+                : [];
+
             $results[$key] = [
                 'title' => $nomination['title'],
                 'limit' => $nomination['limit'],
                 'nominees' => $nominees,
-                'maxScore' => $nominees->max('oscar_score') ?? 0,
+                'maxScore' => $winnerScore,
+                'winnerIds' => $winnerIds,
             ];
         }
 

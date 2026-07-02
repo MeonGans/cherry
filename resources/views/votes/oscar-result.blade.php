@@ -677,7 +677,7 @@
                                 <div class="nominee-result-gallery">
                                     @foreach($result['nominees'] as $nominee)
                                         @php
-                                            $isWinner = $result['maxScore'] > 0 && $nominee->oscar_score === $result['maxScore'];
+                                            $isWinner = in_array((int) $nominee->id, $result['winnerIds'], true);
                                         @endphp
                                         <article class="award-nominee {{ $isWinner ? 'is-winner' : '' }}">
                                             <div class="award-nominee-image">
