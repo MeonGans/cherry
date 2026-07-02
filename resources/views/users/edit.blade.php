@@ -62,7 +62,7 @@
             <div>
                 <label for="image" class="mb-2 block font-semibold">Нове фото</label>
                 <input type="file" name="image" id="image" class="form-input" accept="image/*">
-                <p class="mt-2 text-xs text-white-dark">Підтримуються JPG, PNG або WEBP до 4 МБ.</p>
+                <p class="mt-2 text-xs text-white-dark">Підтримуються JPG, PNG або WEBP до 15 МБ. Фото буде оптимізовано під час збереження.</p>
             </div>
 
             <div class="flex gap-2 md:col-span-2">
