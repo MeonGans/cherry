@@ -1,14 +1,25 @@
 @extends('layouts.app')
 
+@include('votes.partials.admin-points-styles')
+
+@section('page-title', 'Бали Оскар')
+
 @section('content')
-    <div class="panel">
-        <div class="mb-5 flex items-center justify-between">
-            <h5 class="text-lg font-semibold dark:text-white-light">Додати бали журі: {{ $vote->name }}</h5>
-            <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-outline-primary">Результат</a>
-        </div>
+    <div class="points-page">
+        <section class="points-hero">
+            <div>
+                <p class="points-kicker">Cherry Camp Awards</p>
+                <h1 class="points-title">{{ $vote->name }}</h1>
+                <p class="points-copy">Додавайте бали журі окремо в потрібній номінації. Картки показують тільки кандидатів, доступних для цієї категорії.</p>
+            </div>
+            <div class="points-actions">
+                <a href="{{ route('votes.index') }}" class="btn btn-outline-primary">До списку</a>
+                <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-primary">Результат</a>
+            </div>
+        </section>
 
         @if($errors->any())
-            <div class="mb-4 rounded border border-danger bg-danger/10 p-3 text-danger">
+            <div class="points-error" role="alert">
                 {{ $errors->first() }}
             </div>
         @endif
@@ -17,45 +28,61 @@
             @foreach($nominations as $key => $nomination)
                 @php
                     $candidates = $candidatesByNomination[$key] ?? collect();
+                    $isOldNomination = old('nomination') === $key;
                 @endphp
 
-                <section class="rounded border border-white-light p-4 dark:border-[#191e3a]">
-                    <h6 class="mb-4 text-base font-bold">{{ $nomination['title'] }}</h6>
+                <form class="points-card" action="{{ route('votes.addPoints', $vote->vote_url) }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="nomination" value="{{ $key }}">
+
+                    <div class="points-card-header">
+                        <div>
+                            <h2 class="points-card-title">{{ $nomination['title'] }}</h2>
+                            <p class="points-card-copy">Оберіть номінанта та вкажіть кількість балів для цієї номінації.</p>
+                        </div>
+                        <span class="points-badge">{{ $candidates->count() }} кандидатів</span>
+                    </div>
 
                     @if($candidates->isEmpty())
-                        <p class="text-white-dark">У цій номінації немає номінантів.</p>
+                        <div class="points-empty">У цій номінації немає номінантів.</div>
                     @else
-                        <form action="{{ route('votes.addPoints', $vote->vote_url) }}" method="POST" class="grid gap-4 md:grid-cols-[1fr_160px_auto] md:items-end">
-                            @csrf
-                            <input type="hidden" name="nomination" value="{{ $key }}">
-
-                            <div>
-                                <label for="nominee_user_id_{{ $key }}">Номінант</label>
-                                <select id="nominee_user_id_{{ $key }}" name="nominee_user_id" class="form-select" required>
-                                    @foreach($candidates as $candidate)
-                                        <option value="{{ $candidate->id }}">{{ $candidate->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <div>
-                                <label for="points_{{ $key }}">Бали</label>
-                                <input type="number" id="points_{{ $key }}" name="points" class="form-input" min="1" required>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary">Додати</button>
-                        </form>
-
-                        <div class="mt-4 grid grid-cols-2 gap-3 md:grid-cols-6">
+                        <div class="points-choice-grid oscar-admin-grid">
                             @foreach($candidates as $candidate)
-                                <div class="overflow-hidden rounded border border-white-light dark:border-[#191e3a]">
-                                    <img src="{{ $candidate->image_url }}" alt="{{ $candidate->name }}" class="h-28 w-full object-cover">
-                                    <div class="p-2 text-center text-xs font-semibold">{{ $candidate->name }}</div>
-                                </div>
+                                <label class="points-choice" style="--choice-color: #d4af37;">
+                                    <input
+                                        class="points-choice-input"
+                                        type="radio"
+                                        name="nominee_user_id"
+                                        value="{{ $candidate->id }}"
+                                        @checked($isOldNomination && (string) old('nominee_user_id') === (string) $candidate->id)
+                                        required
+                                    >
+                                    <span class="points-choice-card nominee-choice-card">
+                                        <span class="points-check" aria-hidden="true">✓</span>
+                                        <img src="{{ $candidate->image_url }}" alt="{{ $candidate->name }}">
+                                        <span class="points-choice-title">{{ $candidate->name }}</span>
+                                    </span>
+                                </label>
                             @endforeach
                         </div>
+
+                        <div class="points-submit-panel">
+                            <div>
+                                <label class="points-label" for="points_{{ $key }}">Бали</label>
+                                <input
+                                    type="number"
+                                    id="points_{{ $key }}"
+                                    name="points"
+                                    class="form-input"
+                                    min="1"
+                                    value="{{ $isOldNomination ? old('points', 1) : 1 }}"
+                                    required
+                                >
+                            </div>
+                            <button type="submit" class="btn btn-primary">Додати бали</button>
+                        </div>
                     @endif
-                </section>
+                </form>
             @endforeach
         </div>
     </div>
