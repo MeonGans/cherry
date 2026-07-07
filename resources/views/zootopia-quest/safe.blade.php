@@ -12,7 +12,7 @@
             <h1>Введіть пароль скрині</h1>
             <p class="zootopia-safe-copy">Фінальний шифр складається з дев'яти букв.</p>
 
-            <section class="zootopia-order-stage" data-order-stage>
+            <section class="zootopia-order-stage" data-order-stage hidden aria-hidden="true">
                 <p class="zootopia-step-label">Завдання 1</p>
                 <h2>Розташуйте слова у правильному порядку</h2>
                 <div id="word-container" class="zootopia-words"></div>
@@ -22,7 +22,7 @@
                 <div id="order-status" class="zootopia-status-message" aria-live="polite"></div>
             </section>
 
-            <section id="password-section" class="zootopia-password is-locked">
+            <section id="password-section" class="zootopia-password">
                 <form action="{{ route('zootopia.safe.handle') }}" method="POST" id="password-form" autocomplete="off">
                     @csrf
                     <input type="hidden" name="password" id="password-value" value="">
@@ -38,6 +38,7 @@
                                 required
                                 class="zootopia-pin-input"
                                 autocomplete="off"
+                                @if ($i === 0) autofocus @endif
                                 aria-label="Буква {{ $i + 1 }}"
                             >
                         @endfor
