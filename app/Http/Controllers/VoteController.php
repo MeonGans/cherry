@@ -53,11 +53,9 @@ class VoteController extends Controller
             ]);
         }
 
-        $activeSession = null;
+        $activeSession = CampSession::where('active', true)->first();
 
         if ($data['type'] === Vote::TYPE_OSCAR) {
-            $activeSession = CampSession::where('active', true)->first();
-
             if (!$activeSession) {
                 return back()
                     ->withInput()
@@ -240,6 +238,56 @@ class VoteController extends Controller
             ->values();
 
         return view('votes.result', compact('vote', 'teams', 'maxVotes', 'showScores'));
+    }
+
+    public function participation($voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)
+            ->with('session')
+            ->firstOrFail();
+        $sessionResolution = $this->resolveParticipationSession($vote);
+        $session = $sessionResolution['session'];
+        $sessionNote = $sessionResolution['note'];
+        $participants = collect();
+
+        if ($session) {
+            $selections = $this->participationSelections($vote);
+            $participants = User::with(['team.element'])
+                ->where('session_id', $session->id)
+                ->get()
+                ->sortBy(fn (User $user) => sprintf(
+                    '%04d-%s',
+                    $user->team_id ?? 9999,
+                    mb_strtolower($user->name)
+                ))
+                ->values()
+                ->map(function (User $user) use ($selections) {
+                    $selection = $selections->get($user->id);
+
+                    return [
+                        'user' => $user,
+                        'has_voted' => (bool) $selection,
+                        'kind' => $selection['kind'] ?? null,
+                        'summary' => $selection['summary'] ?? null,
+                        'choices' => $selection['choices'] ?? collect(),
+                        'voted_at' => $selection['voted_at'] ?? null,
+                    ];
+                });
+        }
+
+        $totalCount = $participants->count();
+        $votedCount = $participants->where('has_voted', true)->count();
+        $pendingCount = max(0, $totalCount - $votedCount);
+
+        return view('votes.participation', compact(
+            'vote',
+            'session',
+            'sessionNote',
+            'participants',
+            'totalCount',
+            'votedCount',
+            'pendingCount'
+        ));
     }
 
     public function addPointsForm($voteUrl)
@@ -441,6 +489,190 @@ class VoteController extends Controller
         }
 
         return 1000 + $team->id;
+    }
+
+    private function resolveParticipationSession(Vote $vote): array
+    {
+        if ($vote->session_id) {
+            return [
+                'session' => $vote->session ?: CampSession::find($vote->session_id),
+                'note' => null,
+            ];
+        }
+
+        $sessionIds = $this->voterSessionIds($vote);
+
+        if ($sessionIds->count() === 1) {
+            return [
+                'session' => CampSession::find($sessionIds->first()),
+                'note' => 'Голосування не має прямої привʼязки до заїзду, тому заїзд визначено за вже поданими голосами.',
+            ];
+        }
+
+        if ($sessionIds->count() > 1) {
+            return [
+                'session' => null,
+                'note' => 'Не вдалося однозначно визначити заїзд: у голосуванні є учасники з різних сесій.',
+            ];
+        }
+
+        $activeSession = CampSession::where('active', true)->first();
+
+        return [
+            'session' => $activeSession,
+            'note' => $activeSession
+                ? 'Голосування ще не має голосів і прямої привʼязки до заїзду, тому показано поточну активну сесію.'
+                : 'Голосування не має прямої привʼязки до заїзду, а активної сесії зараз немає.',
+        ];
+    }
+
+    private function voterSessionIds(Vote $vote)
+    {
+        $userIds = $this->voterUserIds($vote);
+
+        if ($userIds->isEmpty()) {
+            return collect();
+        }
+
+        return User::whereIn('id', $userIds)
+            ->pluck('session_id')
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
+    private function voterUserIds(Vote $vote)
+    {
+        if ($vote->isPhotoVote()) {
+            return PhotoVote::where('vote_id', $vote->id)
+                ->where('source', PhotoVote::SOURCE_USER)
+                ->whereNotNull('user_id')
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+        }
+
+        if ($vote->isOscarVote()) {
+            return OscarVote::where('vote_id', $vote->id)
+                ->whereNotNull('user_id')
+                ->pluck('user_id')
+                ->unique()
+                ->values();
+        }
+
+        return UserVote::where('vote_id', $vote->id)
+            ->whereNotNull('user_id')
+            ->pluck('user_id')
+            ->unique()
+            ->values();
+    }
+
+    private function participationSelections(Vote $vote)
+    {
+        if ($vote->isPhotoVote()) {
+            return $this->photoParticipationSelections($vote);
+        }
+
+        if ($vote->isOscarVote()) {
+            return $this->oscarParticipationSelections($vote);
+        }
+
+        return $this->teamParticipationSelections($vote);
+    }
+
+    private function teamParticipationSelections(Vote $vote)
+    {
+        return UserVote::where('vote_id', $vote->id)
+            ->whereNotNull('user_id')
+            ->with('team.element')
+            ->get()
+            ->keyBy('user_id')
+            ->map(function (UserVote $userVote) {
+                $teamName = $userVote->team?->name ?? 'Команда видалена';
+
+                return [
+                    'kind' => Vote::TYPE_TEAM,
+                    'summary' => $teamName,
+                    'choices' => collect([
+                        [
+                            'label' => 'Команда',
+                            'value' => $teamName,
+                            'color' => $userVote->team?->element?->color ?? '#4361ee',
+                        ],
+                    ]),
+                    'voted_at' => $userVote->created_at,
+                ];
+            });
+    }
+
+    private function photoParticipationSelections(Vote $vote)
+    {
+        return PhotoVote::where('vote_id', $vote->id)
+            ->where('source', PhotoVote::SOURCE_USER)
+            ->whereNotNull('user_id')
+            ->with('photo')
+            ->orderBy('created_at')
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($photoVotes) {
+                $photos = $photoVotes
+                    ->pluck('photo')
+                    ->filter()
+                    ->map(fn (VotePhoto $photo) => [
+                        'title' => $photo->title,
+                        'image_url' => asset($photo->image_path),
+                    ])
+                    ->values();
+
+                return [
+                    'kind' => Vote::TYPE_PHOTO,
+                    'summary' => $photos->pluck('title')->implode(', '),
+                    'choices' => $photos,
+                    'voted_at' => $photoVotes->min('created_at'),
+                ];
+            });
+    }
+
+    private function oscarParticipationSelections(Vote $vote)
+    {
+        $nominationOrder = array_keys(Vote::OSCAR_NOMINATIONS);
+
+        return OscarVote::where('vote_id', $vote->id)
+            ->whereNotNull('user_id')
+            ->with('nominee')
+            ->get()
+            ->groupBy('user_id')
+            ->map(function ($oscarVotes) use ($nominationOrder) {
+                $choices = collect($nominationOrder)
+                    ->map(function (string $nominationKey) use ($oscarVotes) {
+                        $nominees = $oscarVotes
+                            ->where('nomination', $nominationKey)
+                            ->pluck('nominee')
+                            ->filter()
+                            ->pluck('name')
+                            ->values();
+
+                        if ($nominees->isEmpty()) {
+                            return null;
+                        }
+
+                        return [
+                            'title' => Vote::OSCAR_NOMINATIONS[$nominationKey]['title'] ?? $nominationKey,
+                            'nominees' => $nominees,
+                        ];
+                    })
+                    ->filter()
+                    ->values();
+
+                return [
+                    'kind' => Vote::TYPE_OSCAR,
+                    'summary' => $choices
+                        ->map(fn (array $choice) => $choice['title'] . ': ' . $choice['nominees']->implode(', '))
+                        ->implode('; '),
+                    'choices' => $choices,
+                    'voted_at' => $oscarVotes->min('created_at'),
+                ];
+            });
     }
 
     private function photoResult(Vote $vote, bool $showScores = false)

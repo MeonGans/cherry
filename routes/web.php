@@ -61,6 +61,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/votes', [VoteController::class, 'index'])->name('votes.index');
     Route::get('/votes/create', [VoteController::class, 'create'])->name('votes.create');
     Route::get('/votes/{voteUrl}/result', [VoteController::class, 'result'])->name('votes.result');
+    Route::get('/votes/{voteUrl}/participation', [VoteController::class, 'participation'])->name('votes.participation');
     Route::get('/votes/{voteUrl}/add-points', [VoteController::class, 'addPointsForm'])->name('votes.addPointsForm');
     Route::post('/votes/{voteUrl}/add-points', [VoteController::class, 'addPoints'])->name('votes.addPoints');
     Route::get('/votes/{voteUrl}/photos', [VoteController::class, 'photosForm'])->name('votes.photosForm');

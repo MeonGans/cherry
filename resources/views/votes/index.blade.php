@@ -50,17 +50,33 @@
                             </a>
                         </td>
                         <td>
+                            @if($vote->session)
+                                <div class="font-semibold text-black dark:text-white">
+                                    Заїзд #{{ $vote->session->id }}
+                                </div>
+                                <div class="text-xs text-white-dark">
+                                    {{ \Illuminate\Support\Carbon::parse($vote->session->start_date)->format('d.m.Y') }}
+                                    -
+                                    {{ \Illuminate\Support\Carbon::parse($vote->session->end_date)->format('d.m.Y') }}
+                                </div>
+                            @endif
+
                             @if($vote->isPhotoVote())
-                                {{ $vote->photos_count }} / 10 фото
+                                <div class="{{ $vote->session ? 'mt-1' : '' }}">{{ $vote->photos_count }} / 10 фото</div>
                             @elseif($vote->isOscarVote())
-                                Сесія #{{ $vote->session_id ?? '-' }}
+                                @unless($vote->session)
+                                    Сесія #{{ $vote->session_id ?? '-' }}
+                                @endunless
                             @else
-                                -
+                                @unless($vote->session)
+                                    -
+                                @endunless
                             @endif
                         </td>
                         <td>
                             <a href="{{ route('votes.result', $vote->vote_url) }}" class="btn btn-outline-primary btn-sm">Результат</a>
                             <a href="{{ route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]) }}" class="btn btn-outline-secondary btn-sm">З балами</a>
+                            <a href="{{ route('votes.participation', $vote->vote_url) }}" class="btn btn-outline-info btn-sm">Учасники</a>
                         </td>
                         <td>
                             <a href="{{ route('votes.addPointsForm', $vote->vote_url) }}" class="btn btn-outline-warning btn-sm">Додати бали</a>
