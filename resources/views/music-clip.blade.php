@@ -533,44 +533,6 @@
             text-align: center;
         }
 
-        .clip-inventory {
-            position: fixed;
-            right: clamp(14px, 2.4vw, 28px);
-            bottom: clamp(14px, 2.4vw, 28px);
-            z-index: 60;
-            display: flex;
-            gap: 8px;
-            padding: 8px;
-            border-radius: 8px;
-            background: rgba(7, 7, 11, 0.8);
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            backdrop-filter: blur(14px);
-            box-shadow: 0 18px 42px rgba(0, 0, 0, 0.34);
-        }
-
-        .clip-inventory div {
-            min-width: 88px;
-            padding: 8px 10px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.08);
-            text-align: center;
-        }
-
-        .clip-inventory span {
-            display: block;
-            color: rgba(255, 255, 255, 0.58);
-            font-size: 12px;
-            line-height: 1.2;
-        }
-
-        .clip-inventory strong {
-            display: block;
-            margin-top: 3px;
-            color: #ffffff;
-            font-size: 20px;
-            line-height: 1;
-        }
-
         @keyframes clip-flow-left {
             from {
                 transform: translateX(58px);
@@ -673,11 +635,6 @@
                 width: min(100%, 340px);
             }
 
-            .clip-inventory {
-                left: 50%;
-                right: auto;
-                transform: translateX(-50%);
-            }
         }
     </style>
 </head>
@@ -786,16 +743,6 @@
         @endif
     </section>
 
-    <aside class="clip-inventory" aria-label="Залишки карток">
-        <div>
-            <span>Жанрів</span>
-            <strong>{{ $genreTotal }}</strong>
-        </div>
-        <div>
-            <span>Кліпів</span>
-            <strong>{{ $songTotal }}</strong>
-        </div>
-    </aside>
 </main>
 
 <script>
