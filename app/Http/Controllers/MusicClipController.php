@@ -124,6 +124,7 @@ class MusicClipController extends Controller
             'id' => $card->id,
             'name' => $card->name,
             'image_url' => $card->image_url,
+            'audio_url' => $card->audio_url,
             'quantity' => $card->quantity,
             'type' => $card->type,
             'type_label' => $card->type_label,

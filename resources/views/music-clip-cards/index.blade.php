@@ -88,6 +88,7 @@
                             <tr>
                                 <th class="w-20">#</th>
                                 <th>Картка</th>
+                                <th class="w-56">Аудіо</th>
                                 <th class="w-40">Шанс появи</th>
                                 <th class="w-64 text-right">Дії</th>
                             </tr>
@@ -108,6 +109,13 @@
                                                 <div class="text-xs text-white-dark">{{ $card->type_label }}</div>
                                             </div>
                                         </div>
+                                    </td>
+                                    <td>
+                                        @if($card->audio_url)
+                                            <audio controls preload="metadata" src="{{ $card->audio_url }}" class="h-8 w-48 max-w-full"></audio>
+                                        @else
+                                            <span class="text-xs text-white-dark">Без аудіо</span>
+                                        @endif
                                     </td>
                                     <td>
                                         <input
@@ -139,7 +147,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center text-white-dark">Карток ще немає.</td>
+                                    <td colspan="5" class="text-center text-white-dark">Карток ще немає.</td>
                                 </tr>
                             @endforelse
                             </tbody>

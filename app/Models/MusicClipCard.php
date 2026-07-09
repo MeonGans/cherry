@@ -17,7 +17,7 @@ class MusicClipCard extends Model
         self::TYPE_SONG => 'Кліп',
     ];
 
-    protected $fillable = ['type', 'name', 'quantity', 'image_path'];
+    protected $fillable = ['type', 'name', 'quantity', 'image_path', 'audio_path'];
 
     public function getImageUrlAttribute(): string
     {
@@ -34,6 +34,15 @@ class MusicClipCard extends Model
         }
 
         return asset('assets/images/file-preview.svg');
+    }
+
+    public function getAudioUrlAttribute(): ?string
+    {
+        if (!$this->audio_path) {
+            return null;
+        }
+
+        return asset($this->audio_path);
     }
 
     public function getTypeLabelAttribute(): string

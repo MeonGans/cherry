@@ -52,6 +52,7 @@ class MusicClipCardController extends Controller
             'name' => 'required|string|max:255',
             'quantity' => 'required|integer|min:0',
             'image' => 'required|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac,flac|max:20480',
         ]);
 
         $card = MusicClipCard::create([
@@ -61,6 +62,7 @@ class MusicClipCardController extends Controller
         ]);
 
         $this->storeImage($request, $card);
+        $this->storeAudio($request, $card);
 
         return redirect()->route('music-clip-cards.index')->with('success', 'Картку додано.');
     }
@@ -77,6 +79,7 @@ class MusicClipCardController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'image' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:4096',
+            'audio' => 'nullable|file|mimes:mp3,wav,ogg,m4a,aac,flac|max:20480',
         ]);
 
         $musicClipCard->update([
@@ -84,6 +87,7 @@ class MusicClipCardController extends Controller
         ]);
 
         $this->storeImage($request, $musicClipCard);
+        $this->storeAudio($request, $musicClipCard);
 
         return redirect()->route('music-clip-cards.index')->with('success', 'Картку оновлено.');
     }
@@ -102,6 +106,7 @@ class MusicClipCardController extends Controller
     public function destroy(MusicClipCard $musicClipCard)
     {
         $this->deleteImage($musicClipCard->image_path);
+        $this->deleteAudio($musicClipCard->audio_path);
 
         $musicClipCard->delete();
 
@@ -139,6 +144,47 @@ class MusicClipCardController extends Controller
         $path = str_replace('\\', '/', $path);
 
         if (!str_starts_with($path, 'fort/images/music-clip/')) {
+            return;
+        }
+
+        $fullPath = public_path($path);
+
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
+        }
+    }
+
+    private function storeAudio(Request $request, MusicClipCard $card): void
+    {
+        if (!$request->hasFile('audio')) {
+            return;
+        }
+
+        $directory = public_path('fort/audio/music-clip');
+        File::ensureDirectoryExists($directory);
+
+        $oldPath = $card->audio_path;
+        $file = $request->file('audio');
+        $filename = $card->id . '-' . Str::random(12) . '.' . $file->extension();
+
+        $file->move($directory, $filename);
+
+        $card->update([
+            'audio_path' => 'fort/audio/music-clip/' . $filename,
+        ]);
+
+        $this->deleteAudio($oldPath);
+    }
+
+    private function deleteAudio(?string $path): void
+    {
+        if (!$path) {
+            return;
+        }
+
+        $path = str_replace('\\', '/', $path);
+
+        if (!str_starts_with($path, 'fort/audio/music-clip/')) {
             return;
         }
 

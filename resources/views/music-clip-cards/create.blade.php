@@ -45,6 +45,12 @@
             </div>
 
             <div>
+                <label for="audio" class="mb-2 block font-semibold">Уривок пісні</label>
+                <input type="file" name="audio" id="audio" class="form-input" accept="audio/*">
+                <div class="mt-1 text-xs text-white-dark">Опціонально для карток кліпів: mp3, wav, ogg, m4a, aac або flac до 20 МБ.</div>
+            </div>
+
+            <div>
                 <label for="quantity" class="mb-2 block font-semibold">Шанс появи</label>
                 <input type="number" name="quantity" id="quantity" class="form-input" min="0" step="1" value="{{ old('quantity', 0) }}" required>
             </div>

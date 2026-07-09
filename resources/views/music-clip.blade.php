@@ -476,6 +476,22 @@
             text-align: center;
         }
 
+        .clip-result-audio {
+            position: relative;
+            z-index: 1;
+            margin-top: 14px;
+            padding: 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+        }
+
+        .clip-result-audio audio {
+            display: block;
+            width: 100%;
+            height: 34px;
+        }
+
         .clip-claim {
             display: flex;
             flex-wrap: wrap;
@@ -751,6 +767,11 @@
                         <img src="{{ $song['image_url'] }}" alt="{{ $song['name'] }}">
                         <span>Кліп</span>
                         <h2>{{ $song['name'] }}</h2>
+                        @if(!empty($song['audio_url']))
+                            <div class="clip-result-audio">
+                                <audio controls preload="metadata" src="{{ $song['audio_url'] }}"></audio>
+                            </div>
+                        @endif
                     </article>
                 </div>
 

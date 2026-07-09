@@ -29,6 +29,9 @@
             <div>
                 <div class="text-sm text-white-dark">{{ $card->type_label }}</div>
                 <div class="text-lg font-semibold">{{ $card->name }}</div>
+                @if($card->audio_url)
+                    <audio controls preload="metadata" src="{{ $card->audio_url }}" class="mt-2 h-9 max-w-xs"></audio>
+                @endif
             </div>
         </div>
 
@@ -44,6 +47,12 @@
             <div>
                 <label for="image" class="mb-2 block font-semibold">Нова картинка</label>
                 <input type="file" name="image" id="image" class="form-input" accept="image/*">
+            </div>
+
+            <div>
+                <label for="audio" class="mb-2 block font-semibold">Новий уривок пісні</label>
+                <input type="file" name="audio" id="audio" class="form-input" accept="audio/*">
+                <div class="mt-1 text-xs text-white-dark">Залиште поле порожнім, якщо поточний аудіофайл не потрібно змінювати.</div>
             </div>
 
             <div class="flex gap-2 md:col-span-2">
