@@ -296,20 +296,35 @@ class VoteController extends Controller
 
         if ($vote->isPhotoVote()) {
             $photos = $vote->photos()->get();
+            $scoreTotals = PhotoVote::where('vote_id', $vote->id)
+                ->selectRaw('vote_photo_id, SUM(points) as total')
+                ->groupBy('vote_photo_id')
+                ->pluck('total', 'vote_photo_id');
 
-            return view('votes.add-photo-points', compact('vote', 'photos'));
+            return view('votes.add-photo-points', compact('vote', 'photos', 'scoreTotals'));
         }
 
         if ($vote->isOscarVote()) {
             $nominations = Vote::OSCAR_NOMINATIONS;
             $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+            $scoreTotals = OscarVote::where('vote_id', $vote->id)
+                ->selectRaw('nomination, nominee_user_id, SUM(points) as total')
+                ->groupBy('nomination', 'nominee_user_id')
+                ->get()
+                ->mapWithKeys(fn (OscarVote $oscarVote) => [
+                    $oscarVote->nomination . ':' . $oscarVote->nominee_user_id => (int) $oscarVote->total,
+                ]);
 
-            return view('votes.add-oscar-points', compact('vote', 'nominations', 'candidatesByNomination'));
+            return view('votes.add-oscar-points', compact('vote', 'nominations', 'candidatesByNomination', 'scoreTotals'));
         }
 
         $teams = Team::with('element')->get();
+        $scoreTotals = UserVote::where('vote_id', $vote->id)
+            ->selectRaw('team_id, SUM(points) as total')
+            ->groupBy('team_id')
+            ->pluck('total', 'team_id');
 
-        return view('votes.add-points', compact('vote', 'teams'));
+        return view('votes.add-points', compact('vote', 'teams', 'scoreTotals'));
     }
 
     public function addPoints(Request $request, $voteUrl)
@@ -325,20 +340,40 @@ class VoteController extends Controller
         }
 
         $data = $request->validate([
-            'team_id' => ['required', 'exists:teams,id'],
-            'points' => ['required', 'integer', 'min:1'],
+            'points' => ['required', 'array'],
+            'points.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $team = Team::findOrFail($data['team_id']);
+        $pointsByTeam = $this->positivePointInputs($data['points']);
 
-        UserVote::create([
-            'vote_id' => $vote->id,
-            'team_id' => $team->id,
-            'user_id' => auth()->id() ?? null,
-            'points' => $data['points'],
-        ]);
+        if ($pointsByTeam->isEmpty()) {
+            return back()
+                ->withInput()
+                ->withErrors(['points' => 'Вкажіть бали хоча б для однієї команди.']);
+        }
 
-        return redirect()->route('votes.result', ['voteUrl' => $voteUrl, 'scores' => 1]);
+        $teams = Team::whereIn('id', $pointsByTeam->keys())->pluck('id');
+
+        if ($teams->count() !== $pointsByTeam->count()) {
+            return back()
+                ->withInput()
+                ->withErrors(['points' => 'Одна з команд не знайдена. Оновіть сторінку та спробуйте ще раз.']);
+        }
+
+        DB::transaction(function () use ($vote, $pointsByTeam) {
+            $pointsByTeam->each(function (int $points, int $teamId) use ($vote) {
+                UserVote::create([
+                    'vote_id' => $vote->id,
+                    'team_id' => $teamId,
+                    'user_id' => auth()->id() ?? null,
+                    'points' => $points,
+                ]);
+            });
+        });
+
+        return redirect()
+            ->route('votes.addPointsForm', $vote->vote_url)
+            ->with('success', 'Бали журі додано: ' . $pointsByTeam->sum() . '.');
     }
 
     public function photosForm($voteUrl)
@@ -420,54 +455,112 @@ class VoteController extends Controller
     private function addPhotoPoints(Request $request, Vote $vote)
     {
         $data = $request->validate([
-            'vote_photo_id' => ['required', 'exists:vote_photos,id'],
-            'points' => ['required', 'integer', 'min:1'],
+            'points' => ['required', 'array'],
+            'points.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $photo = $vote->photos()->whereKey($data['vote_photo_id'])->firstOrFail();
+        $pointsByPhoto = $this->positivePointInputs($data['points']);
 
-        PhotoVote::create([
-            'vote_id' => $vote->id,
-            'vote_photo_id' => $photo->id,
-            'user_id' => auth()->id() ?? null,
-            'source' => PhotoVote::SOURCE_JURY,
-            'points' => $data['points'],
-        ]);
+        if ($pointsByPhoto->isEmpty()) {
+            return back()
+                ->withInput()
+                ->withErrors(['points' => 'Вкажіть бали хоча б для одного фото.']);
+        }
 
-        return redirect()->route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]);
+        $photos = $vote->photos()->whereIn('id', $pointsByPhoto->keys())->pluck('id');
+
+        if ($photos->count() !== $pointsByPhoto->count()) {
+            return back()
+                ->withInput()
+                ->withErrors(['points' => 'Одне з фото не належить цьому голосуванню. Оновіть сторінку та спробуйте ще раз.']);
+        }
+
+        DB::transaction(function () use ($vote, $pointsByPhoto) {
+            $pointsByPhoto->each(function (int $points, int $photoId) use ($vote) {
+                PhotoVote::create([
+                    'vote_id' => $vote->id,
+                    'vote_photo_id' => $photoId,
+                    'user_id' => auth()->id() ?? null,
+                    'source' => PhotoVote::SOURCE_JURY,
+                    'points' => $points,
+                ]);
+            });
+        });
+
+        return redirect()
+            ->route('votes.addPointsForm', $vote->vote_url)
+            ->with('success', 'Бали журі додано: ' . $pointsByPhoto->sum() . '.');
     }
 
     private function addOscarPoints(Request $request, Vote $vote)
     {
         $data = $request->validate([
-            'nomination' => ['required', Rule::in(array_keys(Vote::OSCAR_NOMINATIONS))],
-            'nominee_user_id' => ['required', 'exists:users,id'],
-            'points' => ['required', 'integer', 'min:1'],
+            'points' => ['required', 'array'],
+            'points.*' => ['array'],
+            'points.*.*' => ['nullable', 'integer', 'min:0'],
         ]);
 
         $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
-        $allowedIds = $candidatesByNomination[$data['nomination']]->pluck('id');
+        $pointRows = collect();
 
-        if (!$allowedIds->contains((int) $data['nominee_user_id'])) {
-            return back()
-                ->withInput()
-                ->withErrors(['nominee_user_id' => 'Оберіть номінанта з цієї номінації.']);
+        foreach ($data['points'] as $nomination => $candidatePoints) {
+            if (!array_key_exists($nomination, Vote::OSCAR_NOMINATIONS)) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['points' => 'Одна з номінацій не знайдена. Оновіть сторінку та спробуйте ще раз.']);
+            }
+
+            $pointsByCandidate = $this->positivePointInputs($candidatePoints);
+            $allowedIds = ($candidatesByNomination[$nomination] ?? collect())->pluck('id');
+
+            if ($pointsByCandidate->keys()->diff($allowedIds)->isNotEmpty()) {
+                return back()
+                    ->withInput()
+                    ->withErrors(['points' => 'Один з номінантів не належить до своєї номінації. Оновіть сторінку та спробуйте ще раз.']);
+            }
+
+            $pointsByCandidate->each(function (int $points, int $candidateId) use ($nomination, $pointRows) {
+                $pointRows->push([
+                    'nomination' => $nomination,
+                    'nominee_user_id' => $candidateId,
+                    'points' => $points,
+                ]);
+            });
         }
 
-        OscarVote::create([
-            'vote_id' => $vote->id,
-            'nomination' => $data['nomination'],
-            'user_id' => null,
-            'nominee_user_id' => $data['nominee_user_id'],
-            'points' => $data['points'],
-        ]);
+        if ($pointRows->isEmpty()) {
+            return back()
+                ->withInput()
+                ->withErrors(['points' => 'Вкажіть бали хоча б для одного номінанта.']);
+        }
 
-        return redirect()->route('votes.result', ['voteUrl' => $vote->vote_url, 'scores' => 1]);
+        DB::transaction(function () use ($vote, $pointRows) {
+            $pointRows->each(function (array $row) use ($vote) {
+                OscarVote::create([
+                    'vote_id' => $vote->id,
+                    'nomination' => $row['nomination'],
+                    'user_id' => null,
+                    'nominee_user_id' => $row['nominee_user_id'],
+                    'points' => $row['points'],
+                ]);
+            });
+        });
+
+        return redirect()
+            ->route('votes.addPointsForm', $vote->vote_url)
+            ->with('success', 'Бали журі додано: ' . $pointRows->sum('points') . '.');
     }
 
     private function elementLogoPath(Team $team): string
     {
         return $team->element_logo_path;
+    }
+
+    private function positivePointInputs(array $points)
+    {
+        return collect($points)
+            ->mapWithKeys(fn ($points, $id) => [(int) $id => (int) $points])
+            ->filter(fn (int $points, int $id) => $id > 0 && $points > 0);
     }
 
     private function teamRevealOrder(Team $team): int

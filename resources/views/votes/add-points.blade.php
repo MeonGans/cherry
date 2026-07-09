@@ -10,7 +10,7 @@
             <div>
                 <p class="points-kicker">Командне голосування</p>
                 <h1 class="points-title">{{ $vote->name }}</h1>
-                <p class="points-copy">Оберіть команду за логотипом стихії та додайте потрібну кількість балів вручну.</p>
+                <p class="points-copy">Вкажіть бали біля потрібних команд і збережіть одним натисканням. Порожні поля та нулі не додаються.</p>
             </div>
             <div class="points-actions">
                 <a href="{{ route('votes.index') }}" class="btn btn-outline-primary">До списку</a>
@@ -25,13 +25,19 @@
             </div>
         @endif
 
+        @if(session('success'))
+            <div class="points-success" role="status">
+                {{ session('success') }}
+            </div>
+        @endif
+
         <form class="points-card" action="{{ route('votes.addPoints', $vote->vote_url) }}" method="POST">
             @csrf
 
             <div class="points-card-header">
                 <div>
-                    <h2 class="points-card-title">Команда</h2>
-                    <p class="points-card-copy">Клік по картці одразу обирає команду для нарахування.</p>
+                    <h2 class="points-card-title">Бали команд</h2>
+                    <p class="points-card-copy">Можна заповнити кілька команд одразу.</p>
                 </div>
                 <span class="points-badge">{{ $teams->count() }} команд</span>
             </div>
@@ -41,33 +47,36 @@
             @else
                 <div class="points-choice-grid">
                     @foreach($teams as $team)
-                        <label class="points-choice" style="--choice-color: {{ $team->element?->color ?? '#d9234e' }};">
-                            <input
-                                class="points-choice-input"
-                                type="radio"
-                                name="team_id"
-                                value="{{ $team->id }}"
-                                @checked((string) old('team_id') === (string) $team->id)
-                                required
-                            >
-                            <span class="points-choice-card">
-                                <span class="points-check" aria-hidden="true">✓</span>
+                        <div class="points-choice" style="--choice-color: {{ $team->element?->color ?? '#d9234e' }};">
+                            <div class="points-choice-card points-score-card">
                                 <span class="team-choice-logo">
                                     <img src="{{ $team->element_logo_url }}" alt="{{ $team->element?->name ?? $team->name }}">
                                 </span>
                                 <span class="points-choice-title">{{ $team->name }}</span>
                                 <span class="points-choice-meta">{{ $team->element?->name ?? 'Команда' }}</span>
-                            </span>
-                        </label>
+                                <span class="points-current-score">Зараз: {{ (int) ($scoreTotals[$team->id] ?? 0) }}</span>
+                                <label class="points-score-label" for="points_team_{{ $team->id }}">Бали</label>
+                                <input
+                                    type="number"
+                                    id="points_team_{{ $team->id }}"
+                                    name="points[{{ $team->id }}]"
+                                    class="form-input points-score-input"
+                                    min="0"
+                                    step="1"
+                                    value="{{ old("points.{$team->id}") }}"
+                                    placeholder="0"
+                                >
+                            </div>
+                        </div>
                     @endforeach
                 </div>
 
                 <div class="points-submit-panel">
                     <div>
-                        <label class="points-label" for="points">Бали</label>
-                        <input type="number" id="points" name="points" class="form-input" min="1" value="{{ old('points', 1) }}" required>
+                        <div class="points-label">Пакетне додавання</div>
+                        <p class="points-submit-copy">Заповніть усі потрібні поля перед збереженням.</p>
                     </div>
-                    <button type="submit" class="btn btn-primary">Додати бали</button>
+                    <button type="submit" class="btn btn-primary">Додати всі бали</button>
                 </div>
             @endif
         </form>

@@ -71,6 +71,15 @@
                 padding: 14px 16px;
             }
 
+            .points-success {
+                border: 1px solid rgba(0, 171, 85, 0.24);
+                border-radius: 8px;
+                background: rgba(0, 171, 85, 0.08);
+                color: #008f47;
+                font-weight: 800;
+                padding: 14px 16px;
+            }
+
             .points-card {
                 overflow: hidden;
             }
@@ -182,6 +191,14 @@
                 transform: scale(1);
             }
 
+            .points-score-card {
+                cursor: default;
+            }
+
+            .points-score-card:hover {
+                transform: none;
+            }
+
             .points-check {
                 position: absolute;
                 top: 10px;
@@ -263,6 +280,48 @@
                 padding: 5px 10px;
             }
 
+            .points-current-score {
+                display: inline-flex;
+                min-height: 28px;
+                align-items: center;
+                justify-content: center;
+                border-radius: 999px;
+                background: rgba(67, 97, 238, 0.1);
+                color: #4361ee;
+                font-size: 12px;
+                font-weight: 900;
+                padding: 0 10px;
+            }
+
+            .points-score-footer {
+                width: 100%;
+                border-top: 1px solid #e0e6ed;
+                padding: 12px;
+            }
+
+            .dark .points-score-footer {
+                border-color: #191e3a;
+            }
+
+            .points-score-label {
+                display: block;
+                margin-bottom: 6px;
+                color: #111827;
+                font-size: 12px;
+                font-weight: 900;
+                text-align: left;
+            }
+
+            .dark .points-score-label {
+                color: #ffffff;
+            }
+
+            .points-score-input {
+                text-align: center;
+                font-size: 18px;
+                font-weight: 900;
+            }
+
             .points-submit-panel {
                 display: grid;
                 grid-template-columns: minmax(160px, 220px) auto;
@@ -271,6 +330,16 @@
                 border-top: 1px solid #e0e6ed;
                 background: #f7f8fb;
                 padding: 18px 20px;
+            }
+
+            .points-submit-panel-sticky {
+                border: 1px solid #e0e6ed;
+                border-radius: 8px;
+                box-shadow: 0 14px 34px rgba(31, 45, 61, 0.08);
+            }
+
+            .dark .points-submit-panel-sticky {
+                border-color: #191e3a;
             }
 
             .dark .points-submit-panel {
@@ -288,6 +357,13 @@
 
             .dark .points-label {
                 color: #ffffff;
+            }
+
+            .points-submit-copy {
+                margin: 0;
+                color: #6b7280;
+                font-size: 13px;
+                font-weight: 700;
             }
 
             .points-empty {
