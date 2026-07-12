@@ -4,6 +4,7 @@
     <style>
         body:has(.photo-awards-stage) {
             background: #100f12;
+            overflow-x: hidden;
         }
 
         body:has(.photo-awards-stage) .main-container,
@@ -36,9 +37,12 @@
             --stage-muted: rgba(255, 250, 244, .68);
             --stage-red: #d9234e;
             --stage-gold: #f2c94c;
+            box-sizing: border-box;
             display: grid;
-            width: 100vw;
+            width: 100%;
+            max-width: 100vw;
             min-height: 100svh;
+            overflow-x: clip;
             background:
                 linear-gradient(135deg, rgba(217, 35, 78, .2), transparent 34%),
                 linear-gradient(315deg, rgba(242, 201, 76, .13), transparent 32%),
@@ -51,6 +55,8 @@
             display: grid;
             gap: 18px;
             width: min(100%, 1540px);
+            min-width: 0;
+            max-width: 100%;
             margin: 0 auto;
         }
 
@@ -127,6 +133,9 @@
             grid-auto-flow: dense;
             gap: 16px;
             align-items: stretch;
+            min-width: 0;
+            max-width: 100%;
+            overflow-x: clip;
         }
 
         .photo-result-card {
@@ -215,7 +224,7 @@
             box-shadow: 0 28px 90px rgba(242, 201, 76, .22);
             filter: none;
             opacity: 1;
-            transform: scale(1.02);
+            transform: none;
             z-index: 2;
         }
 
@@ -265,9 +274,10 @@
             position: fixed;
             inset: 0;
             display: none;
-            place-items: center;
+            grid-template-rows: auto minmax(0, 1fr) auto;
+            gap: 16px;
             background: rgba(0, 0, 0, .88);
-            padding: 24px;
+            padding: 18px;
             z-index: 9999;
         }
 
@@ -275,17 +285,43 @@
             display: grid;
         }
 
-        .photo-lightbox img {
+        .photo-lightbox-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .photo-lightbox-counter {
+            display: inline-flex;
+            min-height: 40px;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, .22);
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .1);
+            color: #ffffff;
+            font-weight: 900;
+            padding: 0 16px;
+            white-space: nowrap;
+        }
+
+        .photo-lightbox-viewer {
+            position: relative;
+            display: grid;
+            min-height: 0;
+            place-items: center;
+        }
+
+        .photo-lightbox-viewer img {
             display: block;
             max-width: min(100%, 1300px);
-            max-height: 86svh;
+            max-height: calc(100svh - 190px);
             object-fit: contain;
         }
 
         .photo-lightbox-close {
-            position: fixed;
-            top: 18px;
-            right: 18px;
             display: grid;
             width: 44px;
             height: 44px;
@@ -298,6 +334,84 @@
             font: inherit;
             font-size: 26px;
             line-height: 1;
+        }
+
+        .photo-lightbox-nav {
+            position: absolute;
+            top: 50%;
+            display: grid;
+            width: clamp(46px, 6vw, 64px);
+            aspect-ratio: 1;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .28);
+            border-radius: 999px;
+            background: rgba(0, 0, 0, .42);
+            color: #ffffff;
+            cursor: pointer;
+            font: inherit;
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1;
+            transform: translateY(-50%);
+            transition: background .18s ease, transform .18s ease, opacity .18s ease;
+            z-index: 2;
+        }
+
+        .photo-lightbox-nav:hover:not(:disabled),
+        .photo-lightbox-nav:focus-visible {
+            background: rgba(217, 35, 78, .84);
+            outline: none;
+            transform: translateY(-50%) scale(1.04);
+        }
+
+        .photo-lightbox-nav:disabled {
+            cursor: default;
+            opacity: .34;
+        }
+
+        .photo-lightbox-prev {
+            left: clamp(8px, 2vw, 24px);
+        }
+
+        .photo-lightbox-next {
+            right: clamp(8px, 2vw, 24px);
+        }
+
+        .photo-lightbox-thumbs {
+            display: flex;
+            gap: 10px;
+            min-width: 0;
+            overflow-x: auto;
+            padding: 2px 2px 8px;
+            scrollbar-color: rgba(242, 201, 76, .7) rgba(255, 255, 255, .12);
+        }
+
+        .photo-lightbox-thumb {
+            flex: 0 0 auto;
+            width: clamp(68px, 8vw, 108px);
+            overflow: hidden;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, .12);
+            cursor: pointer;
+            padding: 0;
+            opacity: .62;
+            transition: border-color .18s ease, opacity .18s ease, transform .18s ease;
+        }
+
+        .photo-lightbox-thumb img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            object-fit: cover;
+        }
+
+        .photo-lightbox-thumb:hover,
+        .photo-lightbox-thumb:focus-visible,
+        .photo-lightbox-thumb.is-active {
+            border-color: var(--stage-gold);
+            opacity: 1;
+            outline: none;
+            transform: translateY(-1px);
         }
 
         @media (max-width: 760px) {
@@ -322,6 +436,26 @@
 
             .photo-result-card.winner-revealed {
                 grid-column: span 1;
+            }
+
+            .photo-lightbox {
+                gap: 12px;
+                padding: 12px;
+            }
+
+            .photo-lightbox-viewer img {
+                max-height: calc(100svh - 176px);
+            }
+
+            .photo-lightbox-nav {
+                top: auto;
+                bottom: 8px;
+                transform: none;
+            }
+
+            .photo-lightbox-nav:hover:not(:disabled),
+            .photo-lightbox-nav:focus-visible {
+                transform: scale(1.04);
             }
         }
     </style>
@@ -354,6 +488,7 @@
                             data-owner="{{ $ownerName }}"
                             data-score="{{ $photo->score }}"
                             data-image="{{ asset($photo->image_path) }}"
+                            data-index="{{ $loop->index }}"
                             aria-label="Відкрити фото {{ $loop->iteration }}"
                         >
                             <img src="{{ asset($photo->image_path) }}" alt="Фото учасника">
@@ -377,8 +512,24 @@
     </section>
 
     <div id="photoLightbox" class="photo-lightbox" aria-hidden="true">
-        <button id="photoLightboxClose" class="photo-lightbox-close" type="button" aria-label="Закрити">×</button>
-        <img id="photoLightboxImage" src="" alt="Перегляд фото">
+        <div class="photo-lightbox-topbar">
+            <div id="photoLightboxCounter" class="photo-lightbox-counter">0 / {{ $photos->count() }}</div>
+            <button id="photoLightboxClose" class="photo-lightbox-close" type="button" aria-label="Закрити">&times;</button>
+        </div>
+
+        <div class="photo-lightbox-viewer">
+            <button id="photoLightboxPrev" class="photo-lightbox-nav photo-lightbox-prev" type="button" aria-label="Попереднє фото">&#10094;</button>
+            <img id="photoLightboxImage" src="" alt="Перегляд фото">
+            <button id="photoLightboxNext" class="photo-lightbox-nav photo-lightbox-next" type="button" aria-label="Наступне фото">&#10095;</button>
+        </div>
+
+        <div id="photoLightboxThumbs" class="photo-lightbox-thumbs" aria-label="Мініатюри фото">
+            @foreach($photos as $photo)
+                <button class="photo-lightbox-thumb" type="button" data-index="{{ $loop->index }}" aria-label="Перейти до фото {{ $loop->iteration }}">
+                    <img src="{{ asset($photo->image_path) }}" alt="">
+                </button>
+            @endforeach
+        </div>
     </div>
 
     <script>
@@ -391,17 +542,56 @@
             const lightbox = document.getElementById('photoLightbox');
             const lightboxImage = document.getElementById('photoLightboxImage');
             const lightboxClose = document.getElementById('photoLightboxClose');
+            const lightboxPrev = document.getElementById('photoLightboxPrev');
+            const lightboxNext = document.getElementById('photoLightboxNext');
+            const lightboxCounter = document.getElementById('photoLightboxCounter');
+            const thumbs = Array.from(document.querySelectorAll('.photo-lightbox-thumb'));
+            let lightboxIndex = 0;
 
             stage?.addEventListener('contextmenu', (event) => event.preventDefault());
+
+            const syncLightbox = (index) => {
+                if (!lightboxImage || cards.length === 0) {
+                    return;
+                }
+
+                const targetIndex = Number.isFinite(index) ? index : 0;
+                lightboxIndex = (targetIndex + cards.length) % cards.length;
+                const card = cards[lightboxIndex];
+
+                lightboxImage.src = card.dataset.image;
+
+                if (lightboxCounter) {
+                    lightboxCounter.textContent = `${lightboxIndex + 1} / ${cards.length}`;
+                }
+
+                const hasMultiplePhotos = cards.length > 1;
+                lightboxPrev.disabled = !hasMultiplePhotos;
+                lightboxNext.disabled = !hasMultiplePhotos;
+
+                thumbs.forEach((thumb, thumbIndex) => {
+                    const isActive = thumbIndex === lightboxIndex;
+                    thumb.classList.toggle('is-active', isActive);
+                    thumb.setAttribute('aria-current', isActive ? 'true' : 'false');
+                });
+
+                thumbs[lightboxIndex]?.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'center',
+                });
+            };
 
             const openLightbox = (card) => {
                 if (!lightbox || !lightboxImage) {
                     return;
                 }
 
-                lightboxImage.src = card.dataset.image;
+                const index = Number.parseInt(card.dataset.index, 10);
+                syncLightbox(Number.isNaN(index) ? cards.indexOf(card) : index);
                 lightbox.classList.add('is-open');
                 lightbox.setAttribute('aria-hidden', 'false');
+                document.body.style.overflow = 'hidden';
             };
 
             const closeLightbox = () => {
@@ -412,21 +602,51 @@
                 lightbox.classList.remove('is-open');
                 lightbox.setAttribute('aria-hidden', 'true');
                 lightboxImage.src = '';
+                document.body.style.overflow = '';
             };
+
+            const showPreviousPhoto = () => syncLightbox(lightboxIndex - 1);
+            const showNextPhoto = () => syncLightbox(lightboxIndex + 1);
 
             cards.forEach((card) => {
                 card.addEventListener('click', () => openLightbox(card));
             });
 
             lightboxClose?.addEventListener('click', closeLightbox);
+            lightboxPrev?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                showPreviousPhoto();
+            });
+            lightboxNext?.addEventListener('click', (event) => {
+                event.stopPropagation();
+                showNextPhoto();
+            });
+            thumbs.forEach((thumb) => {
+                thumb.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                    syncLightbox(Number.parseInt(thumb.dataset.index, 10));
+                });
+            });
             lightbox?.addEventListener('click', (event) => {
                 if (event.target === lightbox) {
                     closeLightbox();
                 }
             });
             document.addEventListener('keydown', (event) => {
+                if (!lightbox?.classList.contains('is-open')) {
+                    return;
+                }
+
                 if (event.key === 'Escape') {
                     closeLightbox();
+                }
+
+                if (event.key === 'ArrowLeft') {
+                    showPreviousPhoto();
+                }
+
+                if (event.key === 'ArrowRight') {
+                    showNextPhoto();
                 }
             });
 
@@ -464,7 +684,8 @@
                     }
 
                     window.setTimeout(() => {
-                        winner.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+                        winner.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+                        window.scrollTo({ left: 0 });
                     }, 120);
                 } else if (status) {
                     status.textContent = 'Переможця ще немає';
