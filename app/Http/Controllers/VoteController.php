@@ -552,6 +552,23 @@ class VoteController extends Controller
         return view('votes.photo-print', compact('votePhoto'));
     }
 
+    public function destroyPhoto(VotePhoto $votePhoto)
+    {
+        $votePhoto->load('vote');
+        $voteUrl = $votePhoto->vote?->vote_url;
+        $paths = [
+            $votePhoto->image_path,
+            $votePhoto->original_image_path,
+        ];
+
+        $votePhoto->delete();
+        $this->deleteVotePhotoFiles($paths);
+
+        return redirect()
+            ->route('votes.photosForm', $voteUrl)
+            ->with('success', 'Фото видалено. Учень може завантажити нове фото за своїм PIN-кодом.');
+    }
+
     private function submitPhotoVote(Request $request, Vote $vote, User $user)
     {
         $alreadyVoted = PhotoVote::where('vote_id', $vote->id)
@@ -1258,6 +1275,22 @@ class VoteController extends Controller
         File::copy($originalFullPath, public_path($fallbackRelativePath));
 
         return $fallbackRelativePath;
+    }
+
+    private function deleteVotePhotoFiles(array $paths): void
+    {
+        collect($paths)
+            ->filter()
+            ->map(fn (string $path) => str_replace('\\', '/', $path))
+            ->unique()
+            ->filter(fn (string $path) => str_starts_with($path, 'images/votes/'))
+            ->each(function (string $path) {
+                $fullPath = public_path($path);
+
+                if (File::exists($fullPath)) {
+                    File::delete($fullPath);
+                }
+            });
     }
 
     private function imageOptimizationDriver(): ?string

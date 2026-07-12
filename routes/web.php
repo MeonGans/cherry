@@ -68,6 +68,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::post('/votes/{voteUrl}/photos', [VoteController::class, 'storePhotos'])->name('votes.photos.store');
     Route::patch('/votes/{voteUrl}/photos/finalists', [VoteController::class, 'updatePhotoFinalists'])->name('votes.photos.finalists');
     Route::get('/votes/photos/{votePhoto}/print', [VoteController::class, 'printPhoto'])->name('votes.photos.print');
+    Route::delete('/votes/photos/{votePhoto}', [VoteController::class, 'destroyPhoto'])->name('votes.photos.destroy');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::resource('products', ProductController::class);
 

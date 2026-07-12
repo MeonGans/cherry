@@ -123,6 +123,13 @@
                                     <a href="{{ route('votes.photos.print', $photo) }}" target="_blank" class="btn btn-outline-warning btn-sm">Друк</a>
                                     <a href="{{ asset($photo->print_image_path) }}" target="_blank" class="btn btn-outline-info btn-sm">Оригінал</a>
                                     <a href="{{ asset($photo->image_path) }}" target="_blank" class="btn btn-outline-secondary btn-sm">Preview</a>
+                                    <button
+                                        type="submit"
+                                        form="delete-photo-{{ $photo->id }}"
+                                        class="btn btn-outline-danger btn-sm delete-photo-button"
+                                    >
+                                        Видалити
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -130,6 +137,13 @@
                 </div>
             @endif
         </form>
+
+        @foreach($photos as $photo)
+            <form id="delete-photo-{{ $photo->id }}" action="{{ route('votes.photos.destroy', $photo) }}" method="POST" class="hidden">
+                @csrf
+                @method('DELETE')
+            </form>
+        @endforeach
     </div>
 
     <script>
@@ -159,6 +173,14 @@
 
             checkboxes.forEach((checkbox) => checkbox.addEventListener('change', syncFinalists));
             syncFinalists();
+
+            document.querySelectorAll('.delete-photo-button').forEach((button) => {
+                button.addEventListener('click', (event) => {
+                    if (!window.confirm('Видалити фото? Після цього учень зможе завантажити нове фото за своїм PIN-кодом.')) {
+                        event.preventDefault();
+                    }
+                });
+            });
 
             copyButton?.addEventListener('click', async () => {
                 try {
