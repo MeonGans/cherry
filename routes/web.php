@@ -66,6 +66,8 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::post('/votes/{voteUrl}/add-points', [VoteController::class, 'addPoints'])->name('votes.addPoints');
     Route::get('/votes/{voteUrl}/photos', [VoteController::class, 'photosForm'])->name('votes.photosForm');
     Route::post('/votes/{voteUrl}/photos', [VoteController::class, 'storePhotos'])->name('votes.photos.store');
+    Route::patch('/votes/{voteUrl}/photos/finalists', [VoteController::class, 'updatePhotoFinalists'])->name('votes.photos.finalists');
+    Route::get('/votes/photos/{votePhoto}/print', [VoteController::class, 'printPhoto'])->name('votes.photos.print');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::resource('products', ProductController::class);
 
@@ -92,6 +94,8 @@ Route::middleware(['admin.auth'])->group(function () {
 
 Route::post('/votes', [VoteController::class, 'store'])->name('votes.store');
 Route::get('/votes/success', [VoteController::class, 'success'])->name('votes.success');
+Route::get('/votes/{voteUrl}/upload', [VoteController::class, 'photoUploadForm'])->name('votes.photoUpload');
+Route::post('/votes/{voteUrl}/upload', [VoteController::class, 'storePhotoSubmission'])->name('votes.photoUpload.store');
 Route::get('/votes/{voteUrl}', [VoteController::class, 'show'])->name('votes.show');
 Route::post('/votes/{voteUrl}/authenticate', [VoteController::class, 'authenticate'])->name('votes.authenticate');
 Route::get('/votes/{voteUrl}/vote/{userId}', [VoteController::class, 'vote'])->name('votes.vote');

@@ -161,7 +161,7 @@
         <div class="vote-card-inner">
             <span class="vote-kicker">Фото-голосування</span>
             <h1 class="vote-title">{{ $vote->name }}</h1>
-            <p class="vote-copy">{{ $user->name }}, оберіть рівно 3 фотографії, які хочете підтримати.</p>
+            <p class="vote-copy">{{ $user->name }}, оберіть одну фотографію, яку хочете підтримати.</p>
 
             @if($errors->any())
                 <div class="vote-error" role="alert">
@@ -173,7 +173,7 @@
                 <div class="vote-success" role="status">
                     Ваш голос уже зараховано. Дякуємо за участь!
                 </div>
-            @elseif($photos->count() < 3)
+            @elseif($photos->isEmpty())
                 <div class="vote-error" role="alert">
                     Для цього голосування ще не завантажено достатньо фото.
                 </div>
@@ -185,11 +185,11 @@
                     @endphp
 
                     <div class="photo-vote-toolbar">
-                        <p class="photo-vote-note">Обрані фото підсвітяться рамкою. Після третього вибору інші фото тимчасово заблокуються.</p>
-                        <span id="selectedCounter" class="photo-vote-counter">0 / 3</span>
+                        <p class="photo-vote-note">Обране фото підсвітиться рамкою.</p>
+                        <span id="selectedCounter" class="photo-vote-counter">0 / 1</span>
                     </div>
 
-                    <div class="photo-vote-list" aria-label="Оберіть 3 фотографії">
+                    <div class="photo-vote-list" aria-label="Оберіть одну фотографію">
                         @foreach($photos as $photo)
                             <label class="photo-option" aria-label="Обрати фото">
                                 <input
@@ -234,11 +234,11 @@
                     return checkbox.checked;
                 }).length;
 
-                counter.textContent = selected + ' / 3';
-                button.disabled = selected !== 3;
+                counter.textContent = selected + ' / 1';
+                button.disabled = selected !== 1;
 
                 checkboxes.forEach(function (checkbox) {
-                    checkbox.disabled = selected >= 3 && !checkbox.checked;
+                    checkbox.disabled = selected >= 1 && !checkbox.checked;
                 });
             };
 

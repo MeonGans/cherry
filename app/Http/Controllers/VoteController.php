@@ -12,17 +12,34 @@ use App\Models\UserVote;
 use App\Models\Vote;
 use App\Models\VotePhoto;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Validation\Rule;
+use Intervention\Image\Drivers\Gd\Driver as GdDriver;
+use Intervention\Image\Drivers\Imagick\Driver as ImagickDriver;
+use Intervention\Image\ImageManager;
+use Throwable;
 
 class VoteController extends Controller
 {
+    private const PHOTO_FINALIST_LIMIT = 10;
+    private const PHOTO_UPLOAD_LIMIT_KB = 30720;
+    private const PHOTO_PREVIEW_MAX_SIDE = 1800;
+    private const PHOTO_PREVIEW_WEBP_QUALITY = 82;
+    private const PHOTO_PREVIEW_JPEG_QUALITY = 85;
+
     public function index()
     {
-        $votes = Vote::with('session')->withCount('photos')->latest()->get();
+        $votes = Vote::with('session')
+            ->withCount([
+                'photos',
+                'photos as finalist_photos_count' => fn ($query) => $query->where('is_finalist', true),
+            ])
+            ->latest()
+            ->get();
 
         return view('votes.index', compact('votes'));
     }
@@ -44,7 +61,7 @@ class VoteController extends Controller
             'type' => ['required', Rule::in([Vote::TYPE_TEAM, Vote::TYPE_PHOTO, Vote::TYPE_OSCAR])],
         ]);
 
-        if ($data['type'] === Vote::TYPE_PHOTO) {
+        if ($data['type'] === Vote::TYPE_PHOTO && $request->hasFile('photos')) {
             $request->validate([
                 'photos' => ['required', 'array', 'size:10'],
                 'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
@@ -82,6 +99,12 @@ class VoteController extends Controller
             $this->storeOscarNominees($vote, $request->input('oscar_nominees', []));
         }
 
+        if ($vote->isPhotoVote()) {
+            return redirect()
+                ->route('votes.photosForm', $voteUrl)
+                ->with('success', 'Голосування створено. Посилання для завантаження фото готове.');
+        }
+
         return redirect()->route('votes.show', $voteUrl);
     }
 
@@ -94,6 +117,7 @@ class VoteController extends Controller
 
     public function authenticate(Request $request, $voteUrl)
     {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
         $data = $request->validate([
             'pin_code' => ['required', 'string', 'max:255'],
         ]);
@@ -102,6 +126,12 @@ class VoteController extends Controller
 
         if (!$user) {
             return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Невірний PIN-код.']);
+        }
+
+        if ($vote->session_id && (int) $user->session_id !== (int) $vote->session_id) {
+            return redirect()
+                ->route('votes.show', $voteUrl)
+                ->withErrors(['message' => 'Цей PIN-код належить іншому заїзду.']);
         }
 
         return redirect()->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $user->id]);
@@ -113,7 +143,7 @@ class VoteController extends Controller
         $user = User::findOrFail($userId);
 
         if ($vote->isPhotoVote()) {
-            $photos = $vote->photos()->get();
+            $photos = $vote->photos()->where('is_finalist', true)->get();
             $alreadyVoted = PhotoVote::where('vote_id', $vote->id)
                 ->where('user_id', $user->id)
                 ->where('source', PhotoVote::SOURCE_USER)
@@ -295,7 +325,7 @@ class VoteController extends Controller
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
 
         if ($vote->isPhotoVote()) {
-            $photos = $vote->photos()->get();
+            $photos = $vote->photos()->where('is_finalist', true)->get();
             $scoreTotals = PhotoVote::where('vote_id', $vote->id)
                 ->selectRaw('vote_photo_id, SUM(points) as total')
                 ->groupBy('vote_photo_id')
@@ -378,10 +408,20 @@ class VoteController extends Controller
 
     public function photosForm($voteUrl)
     {
-        $vote = Vote::where('vote_url', $voteUrl)->with('photos')->firstOrFail();
+        $vote = Vote::where('vote_url', $voteUrl)
+            ->with(['photos.user'])
+            ->firstOrFail();
         abort_unless($vote->isPhotoVote(), 404);
 
-        return view('votes.photos', compact('vote'));
+        $photos = $vote->photos()
+            ->with('user')
+            ->orderByDesc('is_finalist')
+            ->orderBy('sort_order')
+            ->get();
+        $finalistCount = $photos->where('is_finalist', true)->count();
+        $uploadUrl = route('votes.photoUpload', $vote->vote_url);
+
+        return view('votes.photos', compact('vote', 'photos', 'finalistCount', 'uploadUrl'));
     }
 
     public function storePhotos(Request $request, $voteUrl)
@@ -389,7 +429,7 @@ class VoteController extends Controller
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
         abort_unless($vote->isPhotoVote(), 404);
 
-        $remainingSlots = 10 - $vote->photos()->count();
+        $remainingSlots = self::PHOTO_FINALIST_LIMIT - $vote->photos()->where('is_finalist', true)->count();
 
         if ($remainingSlots <= 0) {
             return back()->withErrors(['photos' => 'Для цього голосування вже завантажено 10 фото.']);
@@ -397,14 +437,119 @@ class VoteController extends Controller
 
         $request->validate([
             'photos' => ['required', 'array', 'max:' . $remainingSlots],
-            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:5120'],
+            'photos.*' => ['image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::PHOTO_UPLOAD_LIMIT_KB],
         ], [
             'photos.max' => "Можна додати ще не більше {$remainingSlots} фото.",
         ]);
 
-        $this->storeUploadedPhotos($vote, $request->file('photos', []));
+        $this->storeUploadedPhotos($vote, $request->file('photos', []), null, true);
 
-        return redirect()->route('votes.photosForm', $vote->vote_url);
+        return redirect()
+            ->route('votes.photosForm', $vote->vote_url)
+            ->with('success', 'Фото додано у фінал.');
+    }
+
+    public function updatePhotoFinalists(Request $request, $voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        abort_unless($vote->isPhotoVote(), 404);
+
+        $data = $request->validate([
+            'photo_ids' => ['nullable', 'array', 'max:' . self::PHOTO_FINALIST_LIMIT],
+            'photo_ids.*' => ['integer', 'distinct', 'exists:vote_photos,id'],
+        ], [
+            'photo_ids.max' => 'У фінал можна обрати не більше 10 фото.',
+            'photo_ids.*.distinct' => 'Одне фото не можна обрати двічі.',
+        ]);
+
+        $photoIds = collect($data['photo_ids'] ?? [])
+            ->map(fn ($id) => (int) $id)
+            ->values();
+
+        $validPhotoIds = $vote->photos()
+            ->whereIn('id', $photoIds)
+            ->pluck('id');
+
+        if ($validPhotoIds->count() !== $photoIds->count()) {
+            return back()->withErrors(['photo_ids' => 'Одне з фото не належить цьому голосуванню.']);
+        }
+
+        DB::transaction(function () use ($vote, $photoIds) {
+            $vote->photos()->update([
+                'is_finalist' => false,
+                'finalist_selected_at' => null,
+            ]);
+
+            $photoIds->each(function (int $photoId, int $index) use ($vote) {
+                $vote->photos()
+                    ->where('id', $photoId)
+                    ->update([
+                        'is_finalist' => true,
+                        'finalist_selected_at' => now(),
+                        'sort_order' => $index + 1,
+                    ]);
+            });
+        });
+
+        return redirect()
+            ->route('votes.photosForm', $vote->vote_url)
+            ->with('success', 'Фіналістів оновлено.');
+    }
+
+    public function photoUploadForm($voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        abort_unless($vote->isPhotoVote(), 404);
+
+        return view('votes.photo-upload', compact('vote'));
+    }
+
+    public function storePhotoSubmission(Request $request, $voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        abort_unless($vote->isPhotoVote(), 404);
+
+        $data = $request->validate([
+            'pin_code' => ['required', 'string', 'max:255'],
+            'photo' => ['required', 'image', 'mimes:jpg,jpeg,png,webp', 'max:' . self::PHOTO_UPLOAD_LIMIT_KB],
+        ]);
+
+        $user = User::where('pin_code', $data['pin_code'])->first();
+
+        if (!$user) {
+            return back()
+                ->withInput()
+                ->withErrors(['pin_code' => 'Невірний PIN-код.']);
+        }
+
+        if ($vote->session_id && (int) $user->session_id !== (int) $vote->session_id) {
+            return back()
+                ->withInput()
+                ->withErrors(['pin_code' => 'Цей PIN-код належить іншому заїзду.']);
+        }
+
+        $alreadyUploaded = $vote->photos()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        if ($alreadyUploaded) {
+            return back()
+                ->withInput()
+                ->withErrors(['photo' => 'За цим PIN-кодом фото вже завантажено.']);
+        }
+
+        $this->storeUploadedPhotos($vote, [$request->file('photo')], $user, false);
+
+        return redirect()
+            ->route('votes.photoUpload', $vote->vote_url)
+            ->with('success', 'Фото завантажено. Дякуємо!');
+    }
+
+    public function printPhoto(VotePhoto $votePhoto)
+    {
+        $votePhoto->load(['vote', 'user']);
+
+        return view('votes.photo-print', compact('votePhoto'));
     }
 
     private function submitPhotoVote(Request $request, Vote $vote, User $user)
@@ -421,19 +566,20 @@ class VoteController extends Controller
         }
 
         $data = $request->validate([
-            'photo_ids' => ['required', 'array', 'size:3'],
+            'photo_ids' => ['required', 'array', 'size:1'],
             'photo_ids.*' => ['integer', 'distinct', 'exists:vote_photos,id'],
         ], [
-            'photo_ids.required' => 'Оберіть 3 фотографії.',
-            'photo_ids.size' => 'Оберіть рівно 3 фотографії.',
-            'photo_ids.*.distinct' => 'Оберіть 3 різні фотографії.',
+            'photo_ids.required' => 'Оберіть фото.',
+            'photo_ids.size' => 'Оберіть одне фото.',
+            'photo_ids.*.distinct' => 'Оберіть одне фото.',
         ]);
 
         $photoIds = VotePhoto::where('vote_id', $vote->id)
+            ->where('is_finalist', true)
             ->whereIn('id', $data['photo_ids'])
             ->pluck('id');
 
-        if ($photoIds->count() !== 3) {
+        if ($photoIds->count() !== 1) {
             return back()
                 ->withInput()
                 ->withErrors(['photo_ids' => 'Оберіть фото тільки з цього голосування.']);
@@ -467,7 +613,10 @@ class VoteController extends Controller
                 ->withErrors(['points' => 'Вкажіть бали хоча б для одного фото.']);
         }
 
-        $photos = $vote->photos()->whereIn('id', $pointsByPhoto->keys())->pluck('id');
+        $photos = $vote->photos()
+            ->where('is_finalist', true)
+            ->whereIn('id', $pointsByPhoto->keys())
+            ->pluck('id');
 
         if ($photos->count() !== $pointsByPhoto->count()) {
             return back()
@@ -775,19 +924,31 @@ class VoteController extends Controller
             ->groupBy('vote_photo_id')
             ->pluck('total', 'vote_photo_id');
 
-        $photos = $vote->photos()->get()->map(function (VotePhoto $photo) use ($scores) {
-            $photo->score = (int) ($scores[$photo->id] ?? 0);
+        $photos = $vote->photos()
+            ->with('user')
+            ->where('is_finalist', true)
+            ->get()
+            ->map(function (VotePhoto $photo) use ($scores) {
+                $photo->score = (int) ($scores[$photo->id] ?? 0);
 
-            return $photo;
-        });
+                return $photo;
+            });
 
         $maxVotes = $photos->max('score') ?? 0;
+        $winnerPhoto = $maxVotes > 0
+            ? $photos
+                ->sortBy([
+                    ['score', 'desc'],
+                    ['id', 'asc'],
+                ])
+                ->first()
+            : null;
         $photos = $photos->sortBy([
             ['score', 'asc'],
             ['id', 'asc'],
         ])->values();
 
-        return view('votes.photo-result', compact('vote', 'photos', 'maxVotes', 'showScores'));
+        return view('votes.photo-result', compact('vote', 'photos', 'maxVotes', 'showScores', 'winnerPhoto'));
     }
 
     private function submitOscarVote(Request $request, Vote $vote, User $user)
@@ -1005,26 +1166,141 @@ class VoteController extends Controller
         }
     }
 
-    private function storeUploadedPhotos(Vote $vote, array $files): void
+    private function storeUploadedPhotos(Vote $vote, array $files, ?User $user = null, bool $isFinalist = true): void
     {
-        $directory = "images/votes/{$vote->vote_url}";
-        File::ensureDirectoryExists(public_path($directory));
-
-        $startOrder = (int) $vote->photos()->max('sort_order');
-
-        foreach ($files as $index => $file) {
-            $sortOrder = $startOrder + $index + 1;
-            $extension = strtolower($file->getClientOriginalExtension());
-            $fileName = str_pad((string) $sortOrder, 2, '0', STR_PAD_LEFT) . '-' . Str::random(12) . ".{$extension}";
-
-            $file->move(public_path($directory), $fileName);
-
-            VotePhoto::create([
-                'vote_id' => $vote->id,
-                'title' => "Фото {$sortOrder}",
-                'image_path' => "{$directory}/{$fileName}",
-                'sort_order' => $sortOrder,
-            ]);
+        foreach ($files as $file) {
+            if ($file instanceof UploadedFile) {
+                $this->storeUploadedPhoto($vote, $file, $user, $isFinalist);
+            }
         }
+    }
+
+    private function storeUploadedPhoto(Vote $vote, UploadedFile $file, ?User $user, bool $isFinalist): VotePhoto
+    {
+        $baseDirectory = "images/votes/{$vote->vote_url}";
+        $originalDirectory = "{$baseDirectory}/originals";
+        $previewDirectory = "{$baseDirectory}/preview";
+
+        File::ensureDirectoryExists(public_path($originalDirectory));
+        File::ensureDirectoryExists(public_path($previewDirectory));
+
+        $sortOrder = ((int) $vote->photos()->max('sort_order')) + 1;
+        $extension = $this->safePhotoExtension($file);
+        $baseName = str_pad((string) $sortOrder, 2, '0', STR_PAD_LEFT) . '-' . Str::random(12);
+        $originalFileName = "{$baseName}.{$extension}";
+        $originalRelativePath = "{$originalDirectory}/{$originalFileName}";
+        $originalFullPath = public_path($originalRelativePath);
+
+        $file->move(public_path($originalDirectory), $originalFileName);
+
+        $previewRelativePath = $this->savePhotoPreview(
+            $originalFullPath,
+            $previewDirectory,
+            $baseName,
+            $extension
+        );
+
+        return VotePhoto::create([
+            'vote_id' => $vote->id,
+            'user_id' => $user?->id,
+            'title' => "Фото {$sortOrder}",
+            'image_path' => $previewRelativePath,
+            'original_image_path' => $originalRelativePath,
+            'is_finalist' => $isFinalist,
+            'finalist_selected_at' => $isFinalist ? now() : null,
+            'sort_order' => $sortOrder,
+        ]);
+    }
+
+    private function savePhotoPreview(
+        string $originalFullPath,
+        string $previewRelativeDirectory,
+        string $baseName,
+        string $originalExtension
+    ): string {
+        $driver = $this->imageOptimizationDriver();
+
+        if ($driver) {
+            $manager = $this->imageManager($driver);
+            $extension = $this->supportsWebpOutput($driver) ? 'webp' : 'jpg';
+            $previewRelativePath = "{$previewRelativeDirectory}/{$baseName}.{$extension}";
+            $previewFullPath = public_path($previewRelativePath);
+
+            try {
+                $image = $manager
+                    ->read($originalFullPath)
+                    ->scaleDown(self::PHOTO_PREVIEW_MAX_SIDE, self::PHOTO_PREVIEW_MAX_SIDE);
+
+                if ($extension === 'jpg') {
+                    $canvas = $manager
+                        ->create($image->width(), $image->height())
+                        ->fill('ffffff')
+                        ->place($image);
+
+                    $canvas->toJpeg(self::PHOTO_PREVIEW_JPEG_QUALITY)->save($previewFullPath);
+
+                    return $previewRelativePath;
+                }
+
+                $image->toWebp(self::PHOTO_PREVIEW_WEBP_QUALITY)->save($previewFullPath);
+
+                return $previewRelativePath;
+            } catch (Throwable $exception) {
+                report($exception);
+
+                if (File::exists($previewFullPath)) {
+                    File::delete($previewFullPath);
+                }
+            }
+        }
+
+        $fallbackRelativePath = "{$previewRelativeDirectory}/{$baseName}.{$originalExtension}";
+        File::copy($originalFullPath, public_path($fallbackRelativePath));
+
+        return $fallbackRelativePath;
+    }
+
+    private function imageOptimizationDriver(): ?string
+    {
+        if (extension_loaded('imagick') && class_exists('Imagick')) {
+            return 'imagick';
+        }
+
+        if (extension_loaded('gd')) {
+            return 'gd';
+        }
+
+        return null;
+    }
+
+    private function imageManager(string $driver): ImageManager
+    {
+        return $driver === 'imagick'
+            ? new ImageManager(ImagickDriver::class)
+            : new ImageManager(GdDriver::class);
+    }
+
+    private function supportsWebpOutput(string $driver): bool
+    {
+        if ($driver === 'imagick') {
+            try {
+                return class_exists('Imagick') && in_array('WEBP', \Imagick::queryFormats('WEBP'), true);
+            } catch (Throwable) {
+                return false;
+            }
+        }
+
+        return function_exists('imagetypes') && defined('IMG_WEBP') && (imagetypes() & IMG_WEBP) !== 0;
+    }
+
+    private function safePhotoExtension(UploadedFile $file): string
+    {
+        $extension = strtolower($file->extension() ?: $file->getClientOriginalExtension() ?: 'jpg');
+
+        if ($extension === 'jpeg') {
+            return 'jpg';
+        }
+
+        return in_array($extension, ['jpg', 'png', 'webp'], true) ? $extension : 'jpg';
     }
 }

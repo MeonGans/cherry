@@ -62,7 +62,10 @@
                             @endif
 
                             @if($vote->isPhotoVote())
-                                <div class="{{ $vote->session ? 'mt-1' : '' }}">{{ $vote->photos_count }} / 10 фото</div>
+                                <div class="{{ $vote->session ? 'mt-1' : '' }}">
+                                    Фінал: {{ $vote->finalist_photos_count ?? 0 }} / 10
+                                    <span class="text-xs text-white-dark">(подано: {{ $vote->photos_count }})</span>
+                                </div>
                             @elseif($vote->isOscarVote())
                                 @unless($vote->session)
                                     Сесія #{{ $vote->session_id ?? '-' }}

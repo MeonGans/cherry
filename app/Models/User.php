@@ -58,4 +58,9 @@ class User extends Model
     {
         return $this->belongsTo(Team::class, 'desired_team_id');
     }
+
+    public function votePhotos()
+    {
+        return $this->hasMany(VotePhoto::class);
+    }
 }
