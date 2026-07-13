@@ -63,4 +63,9 @@ class User extends Model
     {
         return $this->hasMany(VotePhoto::class);
     }
+
+    public function cherryBalances()
+    {
+        return $this->hasMany(CherryBalance::class);
+    }
 }

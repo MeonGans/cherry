@@ -1,7 +1,7 @@
 @php
     $activeGroup = match (true) {
         request()->routeIs('admin.dashboard') => 'overview',
-        request()->routeIs('list', 'random_list', 'sessions.*', 'users.*') => 'camp',
+        request()->routeIs('list', 'random_list', 'sessions.*', 'users.*', 'cherries.*') => 'camp',
         request()->routeIs('test.*', 'sorting2.*', 'wednesday-quest-routes.*', 'wednesday.quest.*', 'zootopia-quest-routes.*', 'zootopia.quest.*') => 'games',
         request()->routeIs('votes.*') => 'votes',
         request()->routeIs('products.*', 'fortune', 'fortune.two') => 'fortune',
@@ -18,6 +18,7 @@
                 ['label' => 'Список заїзду', 'route' => 'list', 'active' => 'list', 'icon' => 'list'],
                 ['label' => 'Рандомний список', 'route' => 'random_list', 'active' => 'random_list', 'icon' => 'shuffle'],
                 ['label' => 'Сесії', 'route' => 'sessions.index', 'active' => 'sessions.*', 'icon' => 'calendar'],
+                ['label' => 'Облік Черіків', 'route' => 'cherries.index', 'active' => 'cherries.*', 'icon' => 'spark'],
             ],
         ],
         [

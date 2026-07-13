@@ -93,6 +93,10 @@
                 </div>
 
                 <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    <a href="{{ route('cherries.index') }}" class="rounded border border-white-light p-4 transition hover:border-danger hover:text-danger dark:border-[#1b2e4b]">
+                        <div class="font-semibold">Облік Черіків</div>
+                        <div class="mt-1 text-xs text-white-dark">Учасники, команди та оголошення переможців</div>
+                    </a>
                     <a href="{{ route('votes.create') }}" class="rounded border border-white-light p-4 transition hover:border-primary hover:text-primary dark:border-[#1b2e4b]">
                         <div class="font-semibold">Створити голосування</div>
                         <div class="mt-1 text-xs text-white-dark">Командне, фото або Оскар</div>

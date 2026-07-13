@@ -19,4 +19,9 @@ class Session extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function cherryBalances()
+    {
+        return $this->hasMany(CherryBalance::class);
+    }
 }

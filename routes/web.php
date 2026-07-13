@@ -19,6 +19,7 @@ use App\Http\Controllers\SortingTwoController;
 use App\Http\Controllers\SessionController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\CherryController;
 
 
 
@@ -71,6 +72,11 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::delete('/votes/photos/{votePhoto}', [VoteController::class, 'destroyPhoto'])->name('votes.photos.destroy');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
     Route::resource('products', ProductController::class);
+
+    Route::get('/cherries', [CherryController::class, 'index'])->name('cherries.index');
+    Route::post('/cherries/users/{user}/adjust', [CherryController::class, 'adjust'])->name('cherries.adjust');
+    Route::put('/cherries/users/{user}', [CherryController::class, 'update'])->name('cherries.update');
+    Route::get('/cherries/result', [CherryController::class, 'result'])->name('cherries.result');
 
     Route::patch('/clip/cards/{musicClipCard}/quick-update', [MusicClipCardController::class, 'quickUpdate'])->name('music-clip-cards.quick-update');
     Route::resource('/clip/cards', MusicClipCardController::class)
