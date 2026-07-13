@@ -3,13 +3,17 @@
 @section('content')
     <style>
         body:has(.photo-awards-stage) {
+            width: 100% !important;
+            max-width: none !important;
+            margin: 0 !important;
             background: #100f12;
             overflow-x: hidden;
         }
 
         body:has(.photo-awards-stage) .main-container,
         body:has(.photo-awards-stage) .main-container .main-content {
-            width: 100vw !important;
+            box-sizing: border-box;
+            width: 100% !important;
             max-width: none !important;
             min-width: 0 !important;
             margin-right: 0 !important;
@@ -20,7 +24,10 @@
 
         body:has(.photo-awards-stage) .dvanimation,
         body:has(.photo-awards-stage) [x-data="basic"] {
-            width: 100vw;
+            box-sizing: border-box;
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
             min-height: 100svh;
             padding: 0 !important;
         }
@@ -40,7 +47,7 @@
             box-sizing: border-box;
             display: grid;
             width: 100%;
-            max-width: 100vw;
+            max-width: 100%;
             min-height: 100svh;
             overflow-x: clip;
             background:

@@ -26,6 +26,7 @@ use Throwable;
 class VoteController extends Controller
 {
     private const PHOTO_FINALIST_LIMIT = 10;
+    private const PHOTO_VOTE_SELECTION_LIMIT = 3;
     private const PHOTO_UPLOAD_LIMIT_KB = 30720;
     private const PHOTO_PREVIEW_MAX_SIDE = 1800;
     private const PHOTO_PREVIEW_WEBP_QUALITY = 82;
@@ -144,12 +145,13 @@ class VoteController extends Controller
 
         if ($vote->isPhotoVote()) {
             $photos = $vote->photos()->where('is_finalist', true)->get();
+            $selectionLimit = self::PHOTO_VOTE_SELECTION_LIMIT;
             $alreadyVoted = PhotoVote::where('vote_id', $vote->id)
                 ->where('user_id', $user->id)
                 ->where('source', PhotoVote::SOURCE_USER)
                 ->exists();
 
-            return view('votes.photo-vote', compact('vote', 'user', 'photos', 'alreadyVoted'));
+            return view('votes.photo-vote', compact('vote', 'user', 'photos', 'selectionLimit', 'alreadyVoted'));
         }
 
         if ($vote->isOscarVote()) {
@@ -583,12 +585,13 @@ class VoteController extends Controller
         }
 
         $data = $request->validate([
-            'photo_ids' => ['required', 'array', 'size:1'],
+            'photo_ids' => ['required', 'array', 'min:1', 'max:' . self::PHOTO_VOTE_SELECTION_LIMIT],
             'photo_ids.*' => ['integer', 'distinct', 'exists:vote_photos,id'],
         ], [
             'photo_ids.required' => 'Оберіть фото.',
-            'photo_ids.size' => 'Оберіть одне фото.',
-            'photo_ids.*.distinct' => 'Оберіть одне фото.',
+            'photo_ids.min' => 'Оберіть щонайменше одне фото.',
+            'photo_ids.max' => 'Можна обрати не більше трьох фото.',
+            'photo_ids.*.distinct' => 'Одне фото не можна обрати двічі.',
         ]);
 
         $photoIds = VotePhoto::where('vote_id', $vote->id)
@@ -596,21 +599,23 @@ class VoteController extends Controller
             ->whereIn('id', $data['photo_ids'])
             ->pluck('id');
 
-        if ($photoIds->count() !== 1) {
+        if ($photoIds->count() !== count($data['photo_ids'])) {
             return back()
                 ->withInput()
                 ->withErrors(['photo_ids' => 'Оберіть фото тільки з цього голосування.']);
         }
 
-        foreach ($photoIds as $photoId) {
-            PhotoVote::create([
-                'vote_id' => $vote->id,
-                'vote_photo_id' => $photoId,
-                'user_id' => $user->id,
-                'source' => PhotoVote::SOURCE_USER,
-                'points' => 1,
-            ]);
-        }
+        DB::transaction(function () use ($photoIds, $vote, $user) {
+            foreach ($photoIds as $photoId) {
+                PhotoVote::create([
+                    'vote_id' => $vote->id,
+                    'vote_photo_id' => $photoId,
+                    'user_id' => $user->id,
+                    'source' => PhotoVote::SOURCE_USER,
+                    'points' => 1,
+                ]);
+            }
+        });
 
         return redirect()->route('votes.success');
     }

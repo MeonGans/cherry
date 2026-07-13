@@ -161,7 +161,7 @@
         <div class="vote-card-inner">
             <span class="vote-kicker">Фото-голосування</span>
             <h1 class="vote-title">{{ $vote->name }}</h1>
-            <p class="vote-copy">{{ $user->name }}, оберіть одну фотографію, яку хочете підтримати.</p>
+            <p class="vote-copy">{{ $user->name }}, оберіть до трьох фотографій, які хочете підтримати.</p>
 
             @if($errors->any())
                 <div class="vote-error" role="alert">
@@ -185,11 +185,11 @@
                     @endphp
 
                     <div class="photo-vote-toolbar">
-                        <p class="photo-vote-note">Обране фото підсвітиться рамкою.</p>
-                        <span id="selectedCounter" class="photo-vote-counter">0 / 1</span>
+                        <p class="photo-vote-note">Можна обрати від одного до трьох фото.</p>
+                        <span id="selectedCounter" class="photo-vote-counter">0 / {{ $selectionLimit }}</span>
                     </div>
 
-                    <div class="photo-vote-list" aria-label="Оберіть одну фотографію">
+                    <div class="photo-vote-list" aria-label="Оберіть до трьох фотографій">
                         @foreach($photos as $photo)
                             <label class="photo-option" aria-label="Обрати фото">
                                 <input
@@ -224,6 +224,7 @@
             const checkboxes = Array.from(document.querySelectorAll('.photo-checkbox'));
             const counter = document.getElementById('selectedCounter');
             const button = document.getElementById('submitVoteBtn');
+            const maxSelections = @json($selectionLimit);
 
             if (!counter || !button || checkboxes.length === 0) {
                 return;
@@ -234,11 +235,11 @@
                     return checkbox.checked;
                 }).length;
 
-                counter.textContent = selected + ' / 1';
-                button.disabled = selected !== 1;
+                counter.textContent = selected + ' / ' + maxSelections;
+                button.disabled = selected < 1 || selected > maxSelections;
 
                 checkboxes.forEach(function (checkbox) {
-                    checkbox.disabled = selected >= 1 && !checkbox.checked;
+                    checkbox.disabled = selected >= maxSelections && !checkbox.checked;
                 });
             };
 
