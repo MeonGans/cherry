@@ -60,6 +60,14 @@
             </div>
 
             <div>
+                <label for="gender" class="mb-2 block font-semibold">Стать</label>
+                <select name="gender" id="gender" class="form-select" required>
+                    <option value="female" @selected(old('gender', $user->gender) === 'female')>Дівчина</option>
+                    <option value="male" @selected(old('gender', $user->gender) === 'male')>Хлопець</option>
+                </select>
+            </div>
+
+            <div>
                 <label for="image" class="mb-2 block font-semibold">Нове фото</label>
                 <input type="file" name="image" id="image" class="form-input" accept="image/*">
                 <p class="mt-2 text-xs text-white-dark">Підтримуються JPG, PNG або WEBP до 15 МБ. Фото буде оптимізовано під час збереження.</p>

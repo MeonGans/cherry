@@ -26,20 +26,23 @@
             </div>
         @endif
 
-        @foreach($products as $product)
-            <form id="quick-update-product-{{ $product->id }}" action="{{ route('products.quick-update', $product) }}" method="POST" class="hidden">
-                @csrf
-                @method('PATCH')
-            </form>
-        @endforeach
+        <form id="bulk-update-products" action="{{ route('products.bulk-update') }}" method="POST" class="hidden">
+            @csrf
+            @method('PATCH')
+        </form>
 
-        <div class="mb-5">
+        <div class="mb-5 flex flex-wrap items-center justify-between gap-3">
             <input
                 type="search"
                 class="form-input max-w-md"
                 placeholder="Пошук товару"
                 data-table-search="#products-table"
             >
+            @if($products->isNotEmpty())
+                <button type="submit" form="bulk-update-products" class="btn btn-primary">
+                    Зберегти всі товари
+                </button>
+            @endif
         </div>
 
         <div class="table-responsive">
@@ -72,12 +75,18 @@
                         </td>
                         <td>
                             <input
+                                type="hidden"
+                                name="products[{{ $product->id }}][id]"
+                                value="{{ $product->id }}"
+                                form="bulk-update-products"
+                            >
+                            <input
                                 type="number"
-                                name="quantity"
+                                name="products[{{ $product->id }}][quantity]"
                                 min="0"
                                 step="1"
-                                value="{{ old("quantity_{$product->id}", $product->quantity) }}"
-                                form="quick-update-product-{{ $product->id }}"
+                                value="{{ old("products.{$product->id}.quantity", $product->quantity) }}"
+                                form="bulk-update-products"
                                 class="form-input w-28"
                                 required
                             >
@@ -85,21 +94,18 @@
                         <td>
                             <input
                                 type="number"
-                                name="value"
+                                name="products[{{ $product->id }}][value]"
                                 min="0"
                                 max="999999.99"
                                 step="0.01"
-                                value="{{ old("value_{$product->id}", $product->value) }}"
-                                form="quick-update-product-{{ $product->id }}"
+                                value="{{ old("products.{$product->id}.value", $product->value) }}"
+                                form="bulk-update-products"
                                 class="form-input w-28"
                                 required
                             >
                         </td>
                         <td>
                             <div class="flex flex-wrap justify-end gap-2">
-                                <button type="submit" form="quick-update-product-{{ $product->id }}" class="btn btn-primary btn-sm">
-                                    Зберегти
-                                </button>
                                 <a href="{{ route('products.edit', $product) }}" class="btn btn-outline-primary btn-sm">
                                     Редагувати
                                 </a>
@@ -119,6 +125,14 @@
                 </tbody>
             </table>
         </div>
+
+        @if($products->isNotEmpty())
+            <div class="mt-5 flex justify-end">
+                <button type="submit" form="bulk-update-products" class="btn btn-primary">
+                    Зберегти всі товари
+                </button>
+            </div>
+        @endif
 
         <div class="mt-5 grid gap-4 sm:grid-cols-2">
             <div class="rounded border border-white-light p-4 dark:border-[#1b2e4b]">

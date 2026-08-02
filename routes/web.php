@@ -71,6 +71,7 @@ Route::middleware(['admin.auth'])->group(function () {
     Route::get('/votes/photos/{votePhoto}/print', [VoteController::class, 'printPhoto'])->name('votes.photos.print');
     Route::delete('/votes/photos/{votePhoto}', [VoteController::class, 'destroyPhoto'])->name('votes.photos.destroy');
     Route::patch('/products/{product}/quick-update', [ProductController::class, 'quickUpdate'])->name('products.quick-update');
+    Route::patch('/products/bulk-update', [ProductController::class, 'bulkUpdate'])->name('products.bulk-update');
     Route::resource('products', ProductController::class);
 
     Route::get('/cherries', [CherryController::class, 'index'])->name('cherries.index');

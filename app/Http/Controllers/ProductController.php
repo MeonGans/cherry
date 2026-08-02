@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
 
@@ -85,6 +86,27 @@ class ProductController extends Controller
         $product->update($validated);
 
         return redirect()->route('products.index')->with('success', 'Кількість і цінність оновлено.');
+    }
+
+    public function bulkUpdate(Request $request)
+    {
+        $validated = $request->validate([
+            'products' => 'required|array|min:1',
+            'products.*.id' => 'required|integer|distinct|exists:products,id',
+            'products.*.quantity' => 'required|integer|min:0',
+            'products.*.value' => 'required|numeric|min:0|max:999999.99',
+        ]);
+
+        DB::transaction(function () use ($validated) {
+            foreach ($validated['products'] as $data) {
+                Product::whereKey($data['id'])->update([
+                    'quantity' => $data['quantity'],
+                    'value' => $data['value'],
+                ]);
+            }
+        });
+
+        return redirect()->route('products.index')->with('success', 'Усі товари оновлено.');
     }
 
     public function destroy(Product $product)

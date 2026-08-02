@@ -137,9 +137,15 @@ class SessionController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'desired_team_id' => 'nullable|integer|exists:teams,id',
+            'gender' => 'required|in:male,female',
         ]);
 
-        $this->createStudent($session, $validated['name'], $validated['desired_team_id'] ?? null);
+        $this->createStudent(
+            $session,
+            $validated['name'],
+            $validated['desired_team_id'] ?? null,
+            $validated['gender']
+        );
 
         return redirect()
             ->route('sessions.users', $session)
@@ -149,11 +155,21 @@ class SessionController extends Controller
     private function createStudents(Session $session, Collection $students): void
     {
         foreach ($students as $student) {
-            $this->createStudent($session, $student['name'], $student['desired_team_id']);
+            $this->createStudent(
+                $session,
+                $student['name'],
+                $student['desired_team_id'],
+                $student['gender']
+            );
         }
     }
 
-    private function createStudent(Session $session, string $name, ?int $desiredTeamId): User
+    private function createStudent(
+        Session $session,
+        string $name,
+        ?int $desiredTeamId,
+        string $gender = self::DEFAULT_GENDER
+    ): User
     {
         $liceum = Liceum::orderBy('id')->first();
 
@@ -171,7 +187,7 @@ class SessionController extends Controller
             'liceum_id' => $liceum->id,
             'team_id' => null,
             'desired_team_id' => $desiredTeamId,
-            'gender' => self::DEFAULT_GENDER,
+            'gender' => $gender,
             'pin_code' => $this->generateUniquePinCode(),
         ]);
     }
@@ -183,14 +199,15 @@ class SessionController extends Controller
             ->filter();
 
         return $lines->map(function (string $line, int $index) {
-            if (!preg_match('/^(.+?)\s*[-–—]\s*(\d+)$/u', $line, $matches)) {
+            if (!preg_match('/^(.+?)\s*[-–—]\s*(\d+)(?:\s*[-–—]\s*(ч|чоловік|хлопець|male|ж|жінка|дівчина|female))?\s*$/iu', $line, $matches)) {
                 throw ValidationException::withMessages([
-                    'students' => 'Рядок ' . ($index + 1) . ' має бути у форматі: Іванов Іван - 5',
+                    'students' => 'Рядок ' . ($index + 1) . ' має бути у форматі: Іванов Іван - 5 - ч',
                 ]);
             }
 
             $name = trim($matches[1]);
             $desiredTeamId = (int) $matches[2];
+            $gender = $this->parseGenderMarker($matches[3] ?? null);
 
             if ($name === '') {
                 throw ValidationException::withMessages([
@@ -207,8 +224,20 @@ class SessionController extends Controller
             return [
                 'name' => $name,
                 'desired_team_id' => $desiredTeamId,
+                'gender' => $gender,
             ];
         })->values();
+    }
+
+    private function parseGenderMarker(?string $marker): string
+    {
+        if ($marker === null || $marker === '') {
+            return self::DEFAULT_GENDER;
+        }
+
+        return in_array(mb_strtolower($marker), ['ч', 'чоловік', 'хлопець', 'male'], true)
+            ? 'male'
+            : 'female';
     }
 
     private function generateUniquePinCode(): string

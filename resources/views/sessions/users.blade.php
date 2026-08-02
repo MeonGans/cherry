@@ -46,7 +46,7 @@
                 <h6 class="text-base font-semibold text-black dark:text-white">Додати учня</h6>
                 <p class="text-sm text-white-dark">PIN-код сформується автоматично, фото можна додати пізніше через редагування.</p>
             </div>
-            <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_260px_auto]">
+            <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px_180px_auto]">
                 <div>
                     <label for="name" class="mb-2 block font-semibold">Ім'я</label>
                     <input type="text" name="name" id="name" class="form-input" value="{{ old('name') }}" required>
@@ -60,6 +60,13 @@
                                 #{{ $team->id }} - {{ $team->name }}
                             </option>
                         @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label for="gender" class="mb-2 block font-semibold">Стать</label>
+                    <select name="gender" id="gender" class="form-select" required>
+                        <option value="female" @selected(old('gender', 'female') === 'female')>Дівчина</option>
+                        <option value="male" @selected(old('gender') === 'male')>Хлопець</option>
                     </select>
                 </div>
                 <div class="flex items-end">
@@ -84,6 +91,7 @@
                     <th>#</th>
                     <th class="w-20">Фото</th>
                     <th>Ім'я</th>
+                    <th>Стать</th>
                     <th>Команда</th>
                     <th>Очікувана команда</th>
                     <th>PIN-код</th>
@@ -102,6 +110,7 @@
                             >
                         </td>
                         <td class="font-semibold">{{ $user->name }}</td>
+                        <td>{{ $user->gender === 'male' ? 'Хлопець' : 'Дівчина' }}</td>
                         <td>{{ $user->team->name ?? '' }}</td>
                         <td>{{ $user->desiredTeam->name ?? '—' }}</td>
                         <td>{{ $user->pin_code ?? '—' }}</td>
@@ -115,7 +124,7 @@
                     </tr>
                 @empty
                     <tr data-empty-row>
-                        <td colspan="7" class="text-center text-white-dark">У цій сесії ще немає учнів.</td>
+                        <td colspan="8" class="text-center text-white-dark">У цій сесії ще немає учнів.</td>
                     </tr>
                 @endforelse
                 </tbody>
