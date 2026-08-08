@@ -6,6 +6,7 @@ use App\Models\Liceum;
 use App\Models\Session;
 use App\Models\Team;
 use App\Models\User;
+use App\Models\Vote;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -53,6 +54,7 @@ class SessionController extends Controller
             }
 
             $session = Session::create($validated);
+            $this->stopVotesForInactiveSessions();
 
             if ($students->isNotEmpty()) {
                 $this->createStudents($session, $students);
@@ -90,6 +92,7 @@ class SessionController extends Controller
             }
 
             $session->update($validated);
+            $this->stopVotesForInactiveSessions();
         });
 
         return redirect()->route('sessions.index')->with('success', 'Сесію оновлено.');
@@ -97,7 +100,13 @@ class SessionController extends Controller
 
     public function destroy(Session $session)
     {
-        $session->delete();
+        DB::transaction(function () use ($session) {
+            Vote::where('session_id', $session->id)
+                ->whereNull('stopped_at')
+                ->update(['stopped_at' => now()]);
+            $session->delete();
+        });
+
         return redirect()->route('sessions.index')->with('success', 'Сесію видалено.');
     }
 
@@ -106,6 +115,7 @@ class SessionController extends Controller
         DB::transaction(function () use ($session) {
             Session::where('active', true)->update(['active' => false]);
             $session->update(['active' => true]);
+            $this->stopVotesForInactiveSessions();
         });
 
         return redirect()->route('sessions.index')->with('success', 'Сесію активовано.');
@@ -113,7 +123,10 @@ class SessionController extends Controller
 
     public function deactivate(Session $session)
     {
-        $session->update(['active' => false]);
+        DB::transaction(function () use ($session) {
+            $session->update(['active' => false]);
+            $this->stopVotesForInactiveSessions();
+        });
 
         return redirect()->route('sessions.index')->with('success', 'Сесію деактивовано.');
     }
@@ -261,5 +274,12 @@ class SessionController extends Controller
         }
 
         return $query->get();
+    }
+
+    private function stopVotesForInactiveSessions(): void
+    {
+        Vote::whereNull('stopped_at')
+            ->whereHas('session', fn ($query) => $query->where('active', false))
+            ->update(['stopped_at' => now()]);
     }
 }

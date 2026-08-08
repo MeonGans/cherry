@@ -116,9 +116,67 @@ class VoteController extends Controller
         return view('votes.show', compact('vote'));
     }
 
+    public function editOscar($voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->with('session')->firstOrFail();
+        abort_unless($vote->isOscarVote() && $vote->session_id, 404);
+
+        $oscarCandidatesByNomination = $this->oscarCandidatesByNominationForSession($vote->session_id);
+        $selectedNominees = $vote->oscarNominees()
+            ->get()
+            ->groupBy('nomination')
+            ->map(fn ($nominees) => $nominees->pluck('user_id')->map(fn ($id) => (int) $id)->all());
+
+        return view('votes.edit-oscar', compact('vote', 'oscarCandidatesByNomination', 'selectedNominees'));
+    }
+
+    public function updateOscar(Request $request, $voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        abort_unless($vote->isOscarVote() && $vote->session_id, 404);
+
+        $request->validate($this->oscarNomineeRules(), $this->oscarNomineeMessages());
+        $this->validateOscarNomineesBelongToSession($request, $vote->session_id);
+        $nomineesByNomination = $request->input('oscar_nominees', []);
+
+        DB::transaction(function () use ($vote, $nomineesByNomination) {
+            foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+                $selectedIds = collect($nomineesByNomination[$key] ?? [])->map(fn ($id) => (int) $id);
+
+                OscarVote::where('vote_id', $vote->id)
+                    ->where('nomination', $key)
+                    ->whereNotIn('nominee_user_id', $selectedIds)
+                    ->delete();
+            }
+
+            $vote->oscarNominees()->delete();
+            $this->storeOscarNominees($vote, $nomineesByNomination);
+        });
+
+        return redirect()
+            ->route('votes.oscar.edit', $vote->vote_url)
+            ->with('success', 'Номінантів оновлено. Голоси за вилучених номінантів видалено.');
+    }
+
+    public function stop($voteUrl)
+    {
+        $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+
+        if (!$vote->isStopped()) {
+            $vote->update(['stopped_at' => now()]);
+        }
+
+        return redirect()
+            ->route('votes.index')
+            ->with('success', 'Голосування зупинено. Нові голоси більше не приймаються.');
+    }
+
     public function authenticate(Request $request, $voteUrl)
     {
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        if ($vote->isStopped()) {
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Голосування вже зупинено.']);
+        }
         $data = $request->validate([
             'pin_code' => ['required', 'string', 'max:255'],
         ]);
@@ -141,6 +199,9 @@ class VoteController extends Controller
     public function vote($voteUrl, $userId)
     {
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        if ($vote->isStopped()) {
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Голосування вже зупинено.']);
+        }
         $user = User::findOrFail($userId);
 
         if ($vote->isPhotoVote()) {
@@ -178,6 +239,9 @@ class VoteController extends Controller
     public function submitVote(Request $request, $voteUrl, $userId)
     {
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
+        if ($vote->isStopped()) {
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Голосування вже зупинено.']);
+        }
         $user = User::findOrFail($userId);
 
         if ($vote->isPhotoVote()) {
@@ -503,6 +567,10 @@ class VoteController extends Controller
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
         abort_unless($vote->isPhotoVote(), 404);
 
+        if ($vote->isStopped()) {
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Голосування вже зупинено.']);
+        }
+
         return view('votes.photo-upload', compact('vote'));
     }
 
@@ -510,6 +578,10 @@ class VoteController extends Controller
     {
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
         abort_unless($vote->isPhotoVote(), 404);
+
+        if ($vote->isStopped()) {
+            return redirect()->route('votes.show', $voteUrl)->withErrors(['message' => 'Голосування вже зупинено.']);
+        }
 
         $data = $request->validate([
             'pin_code' => ['required', 'string', 'max:255'],

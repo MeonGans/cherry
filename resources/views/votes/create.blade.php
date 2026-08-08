@@ -32,60 +32,18 @@
             <div id="photoInfoBlock" class="mb-4 hidden rounded border border-white-light p-4 dark:border-[#191e3a]">
                 <p class="font-semibold text-black dark:text-white">Збір фото перед голосуванням</p>
                 <p class="mt-2 text-sm text-white-dark">
-                    Після створення зʼявиться унікальне посилання для завантаження. Учні завантажують по одному фото за PIN-кодом, а адмін потім обирає до 10 фіналістів.
+                    Після створення з’явиться унікальне посилання для завантаження. Учасники завантажують по одному фото за PIN-кодом, а адміністратор обирає до 10 фіналістів.
                 </p>
             </div>
 
             <div id="oscarInfoBlock" class="mb-4 hidden rounded border border-warning p-4 dark:border-warning">
-                <p class="font-semibold">Номінації: оператор, монтаж, жіноча роль, чоловіча роль, режисер.</p>
                 @if($activeSession)
-                    <p class="mt-2 text-sm text-white-dark">
-                        Кандидати підтягуються з активної сесії #{{ $activeSession->id }}
-                        ({{ $activeSession->start_date }} - {{ $activeSession->end_date }}).
-                    </p>
-
-                    <div class="mt-5 space-y-4">
-                        @foreach(\App\Models\Vote::OSCAR_NOMINATIONS as $key => $nomination)
-                            @php
-                                $candidates = $oscarCandidatesByNomination[$key] ?? collect();
-                                $selected = old("oscar_nominees.{$key}", []);
-                            @endphp
-
-                            <div class="rounded border border-white-light p-3 dark:border-[#191e3a]">
-                                <label for="oscar_nominees_{{ $key }}" class="mb-2 block font-semibold">
-                                    {{ $nomination['title'] }}
-                                    <span class="text-xs font-normal text-white-dark">
-                                        мінімум {{ $nomination['limit'] }}
-                                    </span>
-                                </label>
-
-                                <select
-                                    id="oscar_nominees_{{ $key }}"
-                                    name="oscar_nominees[{{ $key }}][]"
-                                    class="form-select oscar-multiselect"
-                                    multiple
-                                    size="6"
-                                >
-                                    @foreach($candidates as $candidate)
-                                        <option value="{{ $candidate->id }}" @selected(in_array($candidate->id, $selected))>
-                                            {{ $candidate->name }}
-                                        </option>
-                                    @endforeach
-                                </select>
-
-                                @if($candidates->isEmpty())
-                                    <p class="mt-2 text-sm font-semibold text-danger">Немає кандидатів для цієї номінації.</p>
-                                @else
-                                    <p class="mt-2 text-xs text-white-dark">
-                                        Обрано: <span class="oscar-selected-count">0</span> / {{ $candidates->count() }}
-                                    </p>
-                                @endif
-                            </div>
-                        @endforeach
-                    </div>
+                    <p class="font-semibold">Оберіть номінантів активного заїзду #{{ $activeSession->id }} за фото.</p>
+                    <p class="mt-1 text-sm text-white-dark">{{ $activeSession->start_date }} — {{ $activeSession->end_date }}</p>
+                    @include('votes.partials.oscar-nominee-picker')
                 @else
-                    <p class="mt-2 text-sm font-semibold text-danger">
-                        Активної сесії немає. Щоб створити “Оскар”, спочатку активуйте потрібний заїзд.
+                    <p class="text-sm font-semibold text-danger">
+                        Активного заїзду немає. Щоб створити «Оскар», спочатку активуйте потрібний заїзд.
                     </p>
                 @endif
             </div>
@@ -99,7 +57,6 @@
             const typeSelect = document.getElementById('type');
             const photoBlock = document.getElementById('photoInfoBlock');
             const oscarBlock = document.getElementById('oscarInfoBlock');
-            const oscarMultiselects = Array.from(document.querySelectorAll('.oscar-multiselect'));
             const photoType = @json(\App\Models\Vote::TYPE_PHOTO);
             const oscarType = @json(\App\Models\Vote::TYPE_OSCAR);
 
@@ -108,20 +65,8 @@
                 oscarBlock.classList.toggle('hidden', typeSelect.value !== oscarType);
             };
 
-            const syncOscarCounters = () => {
-                oscarMultiselects.forEach((select) => {
-                    const counter = select.closest('div').querySelector('.oscar-selected-count');
-
-                    if (counter) {
-                        counter.textContent = Array.from(select.selectedOptions).length;
-                    }
-                });
-            };
-
             typeSelect.addEventListener('change', syncBlocks);
-            oscarMultiselects.forEach((select) => select.addEventListener('change', syncOscarCounters));
             syncBlocks();
-            syncOscarCounters();
         });
     </script>
 @endsection

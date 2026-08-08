@@ -10,7 +10,9 @@ class Vote extends Model
     use HasFactory;
 
     public const TYPE_TEAM = 'team';
+
     public const TYPE_PHOTO = 'photo';
+
     public const TYPE_OSCAR = 'oscar';
 
     public const OSCAR_NOMINATIONS = [
@@ -41,7 +43,11 @@ class Vote extends Model
         ],
     ];
 
-    protected $fillable = ['name', 'vote_url', 'type', 'session_id'];
+    protected $fillable = ['name', 'vote_url', 'type', 'session_id', 'stopped_at'];
+
+    protected $casts = [
+        'stopped_at' => 'datetime',
+    ];
 
     public function votes()
     {
@@ -81,5 +87,10 @@ class Vote extends Model
     public function isOscarVote(): bool
     {
         return $this->type === self::TYPE_OSCAR;
+    }
+
+    public function isStopped(): bool
+    {
+        return $this->stopped_at !== null;
     }
 }

@@ -61,6 +61,9 @@ Route::middleware(['admin.auth'])->group(function () {
 
     Route::get('/votes', [VoteController::class, 'index'])->name('votes.index');
     Route::get('/votes/create', [VoteController::class, 'create'])->name('votes.create');
+    Route::get('/votes/{voteUrl}/oscar/edit', [VoteController::class, 'editOscar'])->name('votes.oscar.edit');
+    Route::put('/votes/{voteUrl}/oscar', [VoteController::class, 'updateOscar'])->name('votes.oscar.update');
+    Route::patch('/votes/{voteUrl}/stop', [VoteController::class, 'stop'])->name('votes.stop');
     Route::get('/votes/{voteUrl}/result', [VoteController::class, 'result'])->name('votes.result');
     Route::get('/votes/{voteUrl}/participation', [VoteController::class, 'participation'])->name('votes.participation');
     Route::get('/votes/{voteUrl}/add-points', [VoteController::class, 'addPointsForm'])->name('votes.addPointsForm');
