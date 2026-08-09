@@ -1,5 +1,7 @@
 @extends('layouts.app2')
 
+@section('title', 'Результати Оскару')
+
 @section('content')
     @php
         $categoryTitles = [

@@ -1,5 +1,7 @@
 @extends('layouts.app2')
 
+@section('title', 'Фото заїзду')
+
 @section('content')
     <style>
         body:has(.photo-awards-stage) {

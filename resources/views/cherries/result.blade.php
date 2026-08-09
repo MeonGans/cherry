@@ -1,5 +1,7 @@
 @extends('layouts.app2')
 
+@section('title', 'Результати Черіків')
+
 @section('content')
     <style>
         body:has(.cherry-awards) { overflow: hidden; background: #12070d; }
