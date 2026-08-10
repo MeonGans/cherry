@@ -250,7 +250,7 @@
                     <div class="oscar-nominations">
                         @foreach($nominations as $key => $nomination)
                             @php
-                                $limit = $nomination['limit'];
+                                $limit = $oscarSelectionLimits[$key] ?? $nomination['limit'];
                                 $type = $limit === 1 ? 'radio' : 'checkbox';
                                 $candidates = $candidatesByNomination[$key] ?? collect();
                                 $oldSelected = collect(old("oscar_votes.{$key}", []))->map(fn ($id) => (string) $id)->all();

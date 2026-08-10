@@ -14,6 +14,7 @@
     @foreach(\App\Models\Vote::OSCAR_NOMINATIONS as $key => $nomination)
         @php
             $candidates = $oscarCandidatesByNomination[$key] ?? collect();
+            $limit = $oscarSelectionLimits[$key] ?? $nomination['limit'];
             $selected = collect(old("oscar_nominees.{$key}", $selectedNominees[$key] ?? []))
                 ->map(fn ($id) => (string) $id);
         @endphp
@@ -22,7 +23,12 @@
             <div class="mb-3 flex items-center justify-between gap-3">
                 <div>
                     <h6 class="font-semibold text-black dark:text-white">{{ $nomination['title'] }}</h6>
-                    <p class="text-xs text-white-dark">Оберіть щонайменше {{ $nomination['limit'] }}</p>
+                    <p class="text-xs text-white-dark">
+                        Оберіть щонайменше {{ $limit }}
+                        @if($nomination['gender'] && $candidates->count() < 5)
+                            <span class="block">У заїзді менше 5 учасників цієї статі</span>
+                        @endif
+                    </p>
                 </div>
                 <span class="badge bg-warning nominee-selected-count">0 обрано</span>
             </div>

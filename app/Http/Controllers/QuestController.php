@@ -116,13 +116,13 @@ class QuestController extends Controller
             ],
             4 => [
                 'variant' => 'bonus-strong',
-                'label' => '200 черіків',
+                'label' => '450 черіків',
                 'eyebrow' => 'Бокси вже забрали',
                 'rank' => 'Компенсаційна перемога',
             ],
             5 => [
                 'variant' => 'bonus',
-                'label' => '150 черіків',
+                'label' => '300 черіків',
                 'eyebrow' => 'Фінал пройдено',
                 'rank' => 'Мала перемога',
             ],

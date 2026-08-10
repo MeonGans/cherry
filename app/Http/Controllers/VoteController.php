@@ -51,8 +51,9 @@ class VoteController extends Controller
         $oscarCandidatesByNomination = $activeSession
             ? $this->oscarCandidatesByNominationForSession($activeSession->id)
             : collect();
+        $oscarSelectionLimits = $this->oscarSelectionLimits($oscarCandidatesByNomination);
 
-        return view('votes.create', compact('activeSession', 'oscarCandidatesByNomination'));
+        return view('votes.create', compact('activeSession', 'oscarCandidatesByNomination', 'oscarSelectionLimits'));
     }
 
     public function store(Request $request)
@@ -80,7 +81,11 @@ class VoteController extends Controller
                     ->withErrors(['type' => 'Спочатку активуйте сесію, щоб створити голосування “Оскар”.']);
             }
 
-            $request->validate($this->oscarNomineeRules(), $this->oscarNomineeMessages());
+            $oscarSelectionLimits = $this->oscarSelectionLimitsForSession($activeSession->id);
+            $request->validate(
+                $this->oscarNomineeRules($oscarSelectionLimits),
+                $this->oscarNomineeMessages($oscarSelectionLimits)
+            );
             $this->validateOscarNomineesBelongToSession($request, $activeSession->id);
         }
 
@@ -122,12 +127,13 @@ class VoteController extends Controller
         abort_unless($vote->isOscarVote() && $vote->session_id, 404);
 
         $oscarCandidatesByNomination = $this->oscarCandidatesByNominationForSession($vote->session_id);
+        $oscarSelectionLimits = $this->oscarSelectionLimits($oscarCandidatesByNomination);
         $selectedNominees = $vote->oscarNominees()
             ->get()
             ->groupBy('nomination')
             ->map(fn ($nominees) => $nominees->pluck('user_id')->map(fn ($id) => (int) $id)->all());
 
-        return view('votes.edit-oscar', compact('vote', 'oscarCandidatesByNomination', 'selectedNominees'));
+        return view('votes.edit-oscar', compact('vote', 'oscarCandidatesByNomination', 'oscarSelectionLimits', 'selectedNominees'));
     }
 
     public function updateOscar(Request $request, $voteUrl)
@@ -135,7 +141,11 @@ class VoteController extends Controller
         $vote = Vote::where('vote_url', $voteUrl)->firstOrFail();
         abort_unless($vote->isOscarVote() && $vote->session_id, 404);
 
-        $request->validate($this->oscarNomineeRules(), $this->oscarNomineeMessages());
+        $oscarSelectionLimits = $this->oscarSelectionLimitsForSession($vote->session_id);
+        $request->validate(
+            $this->oscarNomineeRules($oscarSelectionLimits),
+            $this->oscarNomineeMessages($oscarSelectionLimits)
+        );
         $this->validateOscarNomineesBelongToSession($request, $vote->session_id);
         $nomineesByNomination = $request->input('oscar_nominees', []);
 
@@ -218,11 +228,12 @@ class VoteController extends Controller
         if ($vote->isOscarVote()) {
             $nominations = Vote::OSCAR_NOMINATIONS;
             $candidatesByNomination = $this->oscarCandidatesByNomination($vote);
+            $oscarSelectionLimits = $this->oscarSelectionLimitsForSession($vote->session_id);
             $alreadyVoted = OscarVote::where('vote_id', $vote->id)
                 ->where('user_id', $user->id)
                 ->exists();
 
-            return view('votes.oscar-vote', compact('vote', 'user', 'nominations', 'candidatesByNomination', 'alreadyVoted'));
+            return view('votes.oscar-vote', compact('vote', 'user', 'nominations', 'candidatesByNomination', 'oscarSelectionLimits', 'alreadyVoted'));
         }
 
         $teams = Team::with('element')
@@ -1059,9 +1070,10 @@ class VoteController extends Controller
 
         $rules = [];
         $messages = [];
+        $oscarSelectionLimits = $this->oscarSelectionLimitsForSession($vote->session_id);
 
         foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
-            $limit = $nomination['limit'];
+            $limit = $oscarSelectionLimits[$key];
             $rules["oscar_votes.{$key}"] = ['required', 'array', 'size:' . $limit];
             $rules["oscar_votes.{$key}.*"] = ['integer', 'distinct', 'exists:users,id'];
             $messages["oscar_votes.{$key}.required"] = "Оберіть номінантів для категорії “{$nomination['title']}”.";
@@ -1206,25 +1218,46 @@ class VoteController extends Controller
         });
     }
 
-    private function oscarNomineeRules(): array
+    private function oscarSelectionLimitsForSession(?int $sessionId)
+    {
+        if (!$sessionId) {
+            return collect(Vote::OSCAR_NOMINATIONS)->map(fn (array $nomination) => $nomination['limit']);
+        }
+
+        return $this->oscarSelectionLimits($this->oscarCandidatesByNominationForSession($sessionId));
+    }
+
+    private function oscarSelectionLimits($candidatesByNomination)
+    {
+        return collect(Vote::OSCAR_NOMINATIONS)->mapWithKeys(function (array $nomination, string $key) use ($candidatesByNomination) {
+            $candidateCount = ($candidatesByNomination[$key] ?? collect())->count();
+
+            return [$key => Vote::oscarSelectionLimit($nomination, $candidateCount)];
+        });
+    }
+
+    private function oscarNomineeRules($oscarSelectionLimits): array
     {
         $rules = [];
 
         foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
-            $rules["oscar_nominees.{$key}"] = ['required', 'array', 'min:' . $nomination['limit']];
+            $rules["oscar_nominees.{$key}"] = ['required', 'array', 'min:' . $oscarSelectionLimits[$key]];
             $rules["oscar_nominees.{$key}.*"] = ['integer', 'distinct', 'exists:users,id'];
         }
 
         return $rules;
     }
 
-    private function oscarNomineeMessages(): array
+    private function oscarNomineeMessages($oscarSelectionLimits): array
     {
         $messages = [];
 
         foreach (Vote::OSCAR_NOMINATIONS as $key => $nomination) {
+            $limit = $oscarSelectionLimits[$key];
             $messages["oscar_nominees.{$key}.required"] = "Оберіть номінантів для “{$nomination['title']}”.";
-            $messages["oscar_nominees.{$key}.min"] = "Для “{$nomination['title']}” потрібно обрати щонайменше {$nomination['limit']} номінантів.";
+            $messages["oscar_nominees.{$key}.min"] = $limit === 1
+                ? "Для “{$nomination['title']}” потрібно обрати щонайменше одного номінанта."
+                : "Для “{$nomination['title']}” потрібно обрати щонайменше {$limit} номінантів.";
             $messages["oscar_nominees.{$key}.*.distinct"] = "У “{$nomination['title']}” номінанти не можуть повторюватися.";
         }
 

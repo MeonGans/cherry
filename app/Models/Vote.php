@@ -43,6 +43,15 @@ class Vote extends Model
         ],
     ];
 
+    public static function oscarSelectionLimit(array $nomination, int $participantCount): int
+    {
+        if ($nomination['gender'] && $participantCount < 5) {
+            return 1;
+        }
+
+        return $nomination['limit'];
+    }
+
     protected $fillable = ['name', 'vote_url', 'type', 'session_id', 'stopped_at'];
 
     protected $casts = [
