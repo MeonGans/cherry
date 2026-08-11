@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserVote;
 use App\Models\Vote;
 use App\Models\VotePhoto;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -236,9 +237,8 @@ class VoteController extends Controller
             return view('votes.oscar-vote', compact('vote', 'user', 'nominations', 'candidatesByNomination', 'oscarSelectionLimits', 'alreadyVoted'));
         }
 
-        $teams = Team::with('element')
-            ->where('id', '!=', $user->team_id)
-            ->where('id', '!=', 10)
+        $teams = $this->teamVoteOptionsQuery($vote, $user)
+            ->with('element')
             ->get();
         $alreadyVoted = UserVote::where('vote_id', $vote->id)
             ->where('user_id', $user->id)
@@ -281,6 +281,14 @@ class VoteController extends Controller
             return redirect()
                 ->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $userId])
                 ->withErrors(['message' => 'Не можна голосувати за власну команду.']);
+        }
+
+        if (! $this->teamVoteOptionsQuery($vote, $user)
+            ->whereKey($data['team_id'])
+            ->exists()) {
+            return redirect()
+                ->route('votes.vote', ['voteUrl' => $voteUrl, 'userId' => $userId])
+                ->withErrors(['message' => 'Ця команда не бере участі в голосуванні цього заїзду.']);
         }
 
         UserVote::create([
@@ -803,6 +811,31 @@ class VoteController extends Controller
         return redirect()
             ->route('votes.addPointsForm', $vote->vote_url)
             ->with('success', 'Бали журі додано: ' . $pointRows->sum('points') . '.');
+    }
+
+    private function teamVoteOptionsQuery(Vote $vote, User $user): Builder
+    {
+        $query = Team::query()
+            ->where('id', '!=', $user->team_id)
+            ->where('id', '!=', 10);
+
+        $sessionId = $vote->session_id ?: $user->session_id;
+        $activeTeamCount = $sessionId
+            ? User::query()
+                ->where('session_id', $sessionId)
+                ->whereNotNull('team_id')
+                ->where('team_id', '!=', 10)
+                ->distinct()
+                ->count('team_id')
+            : 0;
+
+        if ($activeTeamCount === 4) {
+            $query
+                ->where('name', '!=', 'Метал')
+                ->whereDoesntHave('element', fn ($elementQuery) => $elementQuery->where('name', 'Метал'));
+        }
+
+        return $query;
     }
 
     private function elementLogoPath(Team $team): string
