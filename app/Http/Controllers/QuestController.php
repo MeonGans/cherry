@@ -31,7 +31,7 @@ class QuestController extends Controller
             'password.regex' => 'Пароль має містити тільки букви',
         ]);
 
-        $password = $this->normalizePassword($request->input('password'));
+        $password= $this->normalizePassword($request->input('password'));
         $validPasswords = array_map(
             fn (string $validPassword) => $this->normalizePassword($validPassword),
             $this->validPasswords
